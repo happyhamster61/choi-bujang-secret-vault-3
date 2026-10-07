@@ -14,8 +14,21 @@ export default async function handler(request, response) {
   }
 
   try {
+    const restPath = new URL('rest/v1/', url).pathname;
+    const fetchWithoutSecretBearer = (input, init = {}) => {
+      const requestUrl = new URL(input instanceof Request ? input.url : input);
+      if (secretKey.startsWith('sb_secret_')
+          && requestUrl.origin === new URL(url).origin
+          && requestUrl.pathname.startsWith(restPath)) {
+        const headers = new Headers(init.headers);
+        headers.delete('Authorization');
+        return fetch(input, { ...init, headers });
+      }
+      return fetch(input, init);
+    };
     const supabase = createClient(url, secretKey, {
       auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+      global: { fetch: fetchWithoutSecretBearer },
     });
     const { data, error } = await supabase
       .from('training_notes')
