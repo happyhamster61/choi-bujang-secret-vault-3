@@ -16,6 +16,13 @@
     li { border: 1px solid #51667c; border-radius: 14px; padding: 17px 19px; background: #1a2a3d; }
     strong { display: block; font-size: 18px; margin-bottom: 5px; }
     li span { color: #bfd0e5; }
+    form { display: grid; gap: 12px; max-width: 420px; margin: 24px 0; }
+    label { display: grid; gap: 6px; color: #bfd0e5; }
+    input, button { box-sizing: border-box; padding: 11px 13px; border: 1px solid #51667c; border-radius: 8px; font: inherit; }
+    input { color: #ecf4ff; background: #1a2a3d; }
+    button { width: fit-content; color: #101a28; background: #8ad8df; cursor: pointer; font-weight: 700; }
+    button:disabled { cursor: wait; opacity: .65; }
+    #auth-status { min-height: 1.7em; }
   </style>
 </head>
 <body>
@@ -23,30 +30,117 @@
     <div class="eyebrow">BYTE BACK · 1단계 피해 확인</div>
     <h1>점령된 자료실</h1>
     <p>아래 기록은 학습용 가상 메모입니다.</p>
+    <section aria-labelledby="auth-heading">
+      <h2 id="auth-heading">계정 로그인</h2>
+      <p id="auth-status" role="status" aria-live="polite">로그아웃 상태입니다.</p>
+      <form id="login-form">
+        <label>이메일<input name="email" type="email" autocomplete="username" required></label>
+        <label>비밀번호<input name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">로그인</button>
+      </form>
+      <button id="logout-button" type="button" hidden>로그아웃</button>
+    </section>
     <div class="notice">메모는 서버 API를 통해 불러옵니다.</div>
     <ul id="notes" aria-live="polite"><li>가상 메모를 불러오는 중입니다.</li></ul>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <script type="module">
+    const supabase = window.supabase.createClient(
+      'https://ucjdqkdfcwqiaiisgqkr.supabase.co',
+      'sb_publishable_mJdmH_B-ngOWtTZEA1uLBA_uP5ouuQg'
+    );
+    const authStatus = document.querySelector('#auth-status');
+    const loginForm = document.querySelector('#login-form');
+    const logoutButton = document.querySelector('#logout-button');
+    const loginButton = loginForm.querySelector('button');
     const list = document.querySelector('#notes');
-    try {
-      const response = await fetch('/api/notes', { cache: 'no-store' });
-      if (!response.ok) throw new Error('메모를 불러올 수 없습니다.');
-      const data = await response.json();
-      if (!Array.isArray(data.notes)) throw new Error('메모 형식이 올바르지 않습니다.');
-      list.replaceChildren(...data.notes.map(note => {
+    let notesRequestId = 0;
+
+    async function loadNotes(session) {
+      const requestId = ++notesRequestId;
+      if (!session?.access_token) {
         const item = document.createElement('li');
-        const title = document.createElement('strong');
-        const content = document.createElement('span');
-        title.textContent = note.title;
-        content.textContent = note.content;
-        item.append(title, content);
-        return item;
+        item.textContent = '로그인 후 메모를 볼 수 있습니다.';
+        list.replaceChildren(item);
+        return;
+      }
+
+      list.replaceChildren(Object.assign(document.createElement('li'), {
+        textContent: '가상 메모를 불러오는 중입니다.'
       }));
-    } catch (error) {
-      const item = document.createElement('li');
-      item.textContent = error.message;
-      list.replaceChildren(item);
+      try {
+        const response = await fetch('/api/notes', {
+          cache: 'no-store',
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (!response.ok) throw new Error(response.status === 401
+          ? '로그인이 필요합니다.' : '메모를 불러올 수 없습니다.');
+        const data = await response.json();
+        if (requestId !== notesRequestId) return;
+        if (!Array.isArray(data.notes)) throw new Error('메모 형식이 올바르지 않습니다.');
+        list.replaceChildren(...data.notes.map(note => {
+          const item = document.createElement('li');
+          const title = document.createElement('strong');
+          const content = document.createElement('span');
+          title.textContent = note.title;
+          content.textContent = note.content;
+          item.append(title, content);
+          return item;
+        }));
+      } catch (error) {
+        if (requestId !== notesRequestId) return;
+        const item = document.createElement('li');
+        item.textContent = error.message;
+        list.replaceChildren(item);
+      }
     }
+
+    function showSession(session) {
+      const signedIn = Boolean(session?.user);
+      authStatus.textContent = signedIn ? '로그인 상태입니다.' : '로그아웃 상태입니다.';
+      loginForm.hidden = signedIn;
+      logoutButton.hidden = !signedIn;
+      void loadNotes(session);
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    showSession(sessionData.session);
+    supabase.auth.onAuthStateChange((_event, session) => showSession(session));
+
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      loginButton.disabled = true;
+      authStatus.textContent = '로그인 중입니다.';
+      const formData = new FormData(loginForm);
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.get('email'),
+          password: formData.get('password')
+        });
+        if (error) {
+          authStatus.textContent = `로그인 실패: ${error.message}`;
+          return;
+        }
+        loginForm.reset();
+      } catch (error) {
+        authStatus.textContent = `로그인 실패: ${error.message || '요청을 완료하지 못했습니다.'}`;
+      } finally {
+        loginButton.disabled = false;
+      }
+    });
+
+    logoutButton.addEventListener('click', async () => {
+      logoutButton.disabled = true;
+      try {
+        const { error } = await supabase.auth.signOut();
+        authStatus.textContent = error ? `로그아웃 실패: ${error.message}` : '로그아웃 상태입니다.';
+      } catch (error) {
+        authStatus.textContent = `로그아웃 실패: ${error.message || '요청을 완료하지 못했습니다.'}`;
+      } finally {
+        logoutButton.disabled = false;
+      }
+    });
+
   </script>
 </body>
 </html>
