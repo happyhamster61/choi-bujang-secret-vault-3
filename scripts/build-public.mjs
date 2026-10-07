@@ -5,8 +5,8 @@ import { deploymentIdentity } from './deployment-identity.mjs';
 const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, 'public', 'data.json');
 const config = JSON.parse(await readFile(resolve(root, 'aleph.config.json'), 'utf8'));
-if (config.step !== 1) {
-  throw new Error('1단계 이후에는 공개 data.json 복사를 끝내고 보호된 자료 API로 바꾸세요.');
+if (![1, 2, 3].includes(config.step)) {
+  throw new Error('지원하지 않는 단계 설정입니다.');
 }
 await mkdir(resolve(root, 'public'), { recursive: true });
 await rm(output, { force: true });
