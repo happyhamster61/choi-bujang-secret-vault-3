@@ -8,11 +8,19 @@
 2. 방어전 1단계 카드의 **Deploy** 버튼을 누릅니다. Vercel에 GitHub로 로그인하고, 새 저장소가 **본인 계정의 Public 저장소**인지 확인한 뒤 Deploy를 누릅니다.
 3. 배포가 끝나면 화면에 나온 `https://…vercel.app` 주소를 방어전 1단계 카드에 붙여넣고 제출합니다. 저장소 주소나 설정 파일은 적지 않습니다.
 
-1단계 시작 당시에는 `/data.json`에서 가상 메모가 공개되었습니다. Production 1부터 이 정적 파일에는 메모를 두지 않습니다. 현재 `/` 화면은 브라우저에서 `/api/notes`를 호출하며, Vercel 서버 함수가 Supabase의 `training_notes`에서 `title`과 `content`만 읽어 반환합니다. 1단계 접수와 심판 판정은 포털에서 확인합니다.
+1단계 시작 당시에는 `/data.json`에서 가상 메모가 공개되었습니다. Production 1부터 이 정적 파일에는 메모를 두지 않습니다. 현재 `/` 화면은 Supabase Auth 이메일 로그인·로그아웃을 제공하고, 세션의 Bearer 토큰을 `/api/notes`에 보냅니다. 서버 함수는 `src/verify-login.mjs`로 토큰을 검증한 뒤 Supabase `training_notes`를 조회합니다. 메모 추가·수정·삭제는 로그인한 사용자만 요청할 수 있습니다.
 
 ## Production 2 환경 설정
 
-Vercel 프로젝트의 **Settings → Environment Variables**에서 `SUPABASE_URL`과 `SUPABASE_SECRET_KEY`를 서버 환경변수로 설정하세요. 실제 값은 Vercel의 비밀 입력란에서 직접 입력하고 코드나 브라우저 환경변수에 넣지 않습니다. 저장 후 새 배포를 실행합니다. `/api/notes`는 GET 요청만 허용하며 키를 반환하지 않습니다.
+Vercel 프로젝트의 **Settings → Environment Variables**에서 `SUPABASE_URL`과 `SUPABASE_SECRET_KEY`를 서버 환경변수로 설정하세요. 실제 값은 Vercel의 비밀 입력란에서 직접 입력하고 코드나 브라우저 환경변수에 넣지 않습니다. 저장 후 새 배포를 실행합니다. 서버 비밀 키는 API 함수에서만 사용하며 응답하지 않습니다.
+
+## 3단계 제작 1~3
+
+로그인 사용자는 자료실 화면에서 메모를 추가·수정·삭제할 수 있습니다. 목록은 검증된 로그인 사용자의 `owner_id`로 조회하며, 새 메모의 소유자 ID는 서버가 토큰에서 확인해 저장합니다. 단건 `GET`, `PUT`, `DELETE`에는 아직 소유자 검사가 없습니다. 이 의도된 허점은 4단계에서 고칩니다.
+
+Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 bigint 기본 키를 유지하면서 API 메모 UUID 열을 추가합니다. 이 마이그레이션은 기존 네 건의 가상 메모를 변경하거나 삭제하지 않습니다. 기존 행은 `owner_id`가 비어 있으므로 사용자별 목록에는 나타나지 않습니다.
+
+로컬 정적 빌드는 `npm run build -- --local`로 확인합니다. 제출 자료 생성은 Git 작업 트리가 깨끗하고 저장 설정이 커밋된 상태에서 `npm run bundle`을 실행합니다. bundle은 실제 배포에 보낸 무로그인 요청의 관찰 결과만 자체 점검으로 기록하며, 실제 심판 판정으로 간주하지 않습니다.
 
 ## 시작 틀의 자동 처리
 
