@@ -24,34 +24,42 @@ export default async function handler(request, response) {
   if (!UUID.test(id)) return response.status(400).json({ error: 'INVALID_NOTE_ID' });
 
   try {
-    const { supabase } = await requireNotesAccess(request.headers.authorization);
+    const { supabase, userId } = await requireNotesAccess(request.headers.authorization);
     if (request.method === 'GET') {
       const { data, error } = await supabase.from('training_notes')
-        .select('note_uuid,title,content').eq('note_uuid', id).maybeSingle();
+        .select('note_uuid,title,content,owner_id')
+        .eq('note_uuid', id).eq('owner_id', userId).maybeSingle();
       if (error) throw error;
-      if (!data) return response.status(404).json({ error: 'NOTE_NOT_FOUND' });
+      if (!data || data.owner_id !== userId) {
+        return response.status(404).json({ error: 'NOTE_NOT_FOUND' });
+      }
       return response.status(200).json(toApiNote(data));
     }
 
     if (request.method === 'PUT') {
       const body = readJsonBody(request);
-      if (!validNoteFields(body)) {
+      if (!validNoteFields(body) || Object.prototype.hasOwnProperty.call(body, 'owner_id')) {
         return response.status(400).json({ error: 'INVALID_NOTE' });
       }
       const { data, error } = await supabase.from('training_notes')
         .update({ title: body.title, content: body.body })
-        .eq('note_uuid', id)
-        .select('note_uuid,title,content')
+        .eq('note_uuid', id).eq('owner_id', userId)
+        .select('note_uuid,title,content,owner_id')
         .maybeSingle();
       if (error) throw error;
-      if (!data) return response.status(404).json({ error: 'NOTE_NOT_FOUND' });
+      if (!data || data.owner_id !== userId) {
+        return response.status(404).json({ error: 'NOTE_NOT_FOUND' });
+      }
       return response.status(200).json(toApiNote(data));
     }
 
     const { data, error } = await supabase.from('training_notes')
-      .delete().eq('note_uuid', id).select('note_uuid').maybeSingle();
+      .delete().eq('note_uuid', id).eq('owner_id', userId)
+      .select('note_uuid,owner_id').maybeSingle();
     if (error) throw error;
-    if (!data) return response.status(404).json({ error: 'NOTE_NOT_FOUND' });
+    if (!data || data.owner_id !== userId) {
+      return response.status(404).json({ error: 'NOTE_NOT_FOUND' });
+    }
     return response.status(204).end();
   } catch (error) {
     if (error instanceof NotesAccessError) return sendNotesError(response, error);
