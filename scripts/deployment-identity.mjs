@@ -23,7 +23,7 @@ export function deploymentIdentity(env, config) {
     step: config.step,
     repoUrl: `https://github.com/${owner.toLowerCase()}/${repo.toLowerCase()}`,
     commit: commit.toLowerCase(),
-    publicAppUrl: `https://${host.toLowerCase()}`,
+    publicAppUrl: 'https://choi-bujang-secret-vault-3-8kqo.vercel.app',
     judgeIssuer: config.judgeIssuer,
     sampleMarker: config.sampleMarker,
   };
