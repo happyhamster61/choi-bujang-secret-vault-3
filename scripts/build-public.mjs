@@ -5,7 +5,7 @@ import { deploymentIdentity } from './deployment-identity.mjs';
 const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, 'public', 'data.json');
 const config = JSON.parse(await readFile(resolve(root, 'aleph.config.json'), 'utf8'));
-if (![1, 2, 3].includes(config.step)) {
+if (![1, 2, 3, 4].includes(config.step)) {
   throw new Error('지원하지 않는 단계 설정입니다.');
 }
 await mkdir(resolve(root, 'public'), { recursive: true });
