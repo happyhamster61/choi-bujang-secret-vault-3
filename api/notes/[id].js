@@ -24,7 +24,7 @@ export default async function handler(request, response) {
   if (!UUID.test(id)) return response.status(400).json({ error: 'INVALID_NOTE_ID' });
 
   try {
-    const { supabase, userId } = await requireNotesAccess(request.headers.authorization);
+    const { supabase, userId } = await requireNotesAccess(request.headers);
     if (request.method === 'GET') {
       const { data, error } = await supabase.from('training_notes')
         .select('note_uuid,title,content,owner_id')

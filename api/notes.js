@@ -12,7 +12,7 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { supabase, userId } = await requireNotesAccess(request.headers.authorization);
+    const { supabase, userId } = await requireNotesAccess(request.headers);
     if (request.method === 'GET') {
       const { data, error } = await supabase
         .from('training_notes')

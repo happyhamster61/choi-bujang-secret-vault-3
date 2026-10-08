@@ -8,10 +8,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 let runtime;
 
 export class NotesAccessError extends Error {
-  constructor(status, code) {
+  constructor(status, code, debugAuthPath) {
     super(code);
     this.status = status;
     this.code = code;
+    this.debugAuthPath = debugAuthPath;
   }
 }
 
@@ -39,10 +40,37 @@ function getRuntime(url, secretKey) {
   return runtime;
 }
 
-export async function requireNotesAccess(authorization) {
-  if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) {
-    throw new NotesAccessError(401, 'LOGIN_REQUIRED');
+function authorizationFromHeaders(headers) {
+  const authorization = headers?.authorization;
+  if (authorization !== undefined && authorization !== null) {
+    if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) {
+      throw new NotesAccessError(401, 'LOGIN_REQUIRED', 'bearer');
+    }
+    return { authorization, authPath: 'bearer' };
   }
+
+  const cookieHeader = headers?.cookie;
+  if (typeof cookieHeader !== 'string') {
+    throw new NotesAccessError(401, 'LOGIN_REQUIRED', 'cookie');
+  }
+
+  const cookie = cookieHeader.split(';').map((part) => part.trim())
+    .find((part) => part.startsWith('__Host-sb-access-token='));
+  if (!cookie) throw new NotesAccessError(401, 'LOGIN_REQUIRED', 'cookie');
+
+  const encodedToken = cookie.slice('__Host-sb-access-token='.length);
+  let token;
+  try {
+    token = decodeURIComponent(encodedToken);
+  } catch {
+    throw new NotesAccessError(401, 'LOGIN_REQUIRED', 'cookie');
+  }
+  if (!token) throw new NotesAccessError(401, 'LOGIN_REQUIRED', 'cookie');
+  return { authorization: `Bearer ${token}`, authPath: 'cookie' };
+}
+
+export async function requireNotesAccess(headers) {
+  const { authorization, authPath } = authorizationFromHeaders(headers);
 
   const url = process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -59,13 +87,15 @@ export async function requireNotesAccess(authorization) {
   }
 
   if (!identity || identity.kind !== 'student' || !UUID.test(identity.userId ?? '')) {
-    throw new NotesAccessError(401, 'LOGIN_REQUIRED');
+    throw new NotesAccessError(401, 'LOGIN_REQUIRED',
+      authPath === 'cookie' ? 'cookie-verify-failed' : 'bearer');
   }
   return { supabase, userId: identity.userId };
 }
 
 export function sendNotesError(response, error) {
   if (error instanceof NotesAccessError) {
+    if (error.debugAuthPath) response.setHeader('X-Debug-Auth-Path', error.debugAuthPath);
     return response.status(error.status).json({ error: error.code });
   }
   return response.status(502).json({ error: 'NOTES_UNAVAILABLE' });
