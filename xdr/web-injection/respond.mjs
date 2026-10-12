@@ -68,6 +68,7 @@ export async function processFixture({ root, now = new Date() }) {
   }
 
   const denyCandidates = [];
+  const blockAlerts = [];
   const logLines = [];
   const counts = { block: 0, alert: 0, record: 0 };
   const loggedIds = await readLoggedAlertIds(join(root, 'xdr', 'alerts.log'));
@@ -79,8 +80,7 @@ export async function processFixture({ root, now = new Date() }) {
     }
     counts[decision.action] += 1;
 
-    const candidate = createDenyCandidate(alert, decision, now);
-    if (candidate) denyCandidates.push(candidate);
+    if (decision.action === 'block') blockAlerts.push({ alert, decision });
 
     if (decision.action !== 'record' && !loggedIds.has(alert.id)) {
       logLines.push(JSON.stringify({
@@ -90,6 +90,21 @@ export async function processFixture({ root, now = new Date() }) {
       }));
       loggedIds.add(alert.id);
     }
+  }
+
+  // A source must have at least two independently clear block decisions before
+  // any of its alerts become deny-rule candidates.
+  const repeatedSources = new Map();
+  for (const item of blockAlerts) {
+    const sourceAddress = item.alert?.data?.srcip;
+    if (typeof sourceAddress !== 'string') continue;
+    repeatedSources.set(sourceAddress, (repeatedSources.get(sourceAddress) ?? 0) + 1);
+  }
+  for (const item of blockAlerts) {
+    const sourceAddress = item.alert?.data?.srcip;
+    if ((repeatedSources.get(sourceAddress) ?? 0) < 2) continue;
+    const candidate = createDenyCandidate(item.alert, item.decision, now);
+    if (candidate) denyCandidates.push(candidate);
   }
 
   const candidatePath = join(root, 'xdr', 'web-injection', 'deny-rules.json');

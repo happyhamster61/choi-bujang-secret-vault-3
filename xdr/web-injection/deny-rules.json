@@ -5,22 +5,15 @@
       "effect": "deny",
       "sourceAddress": "203.0.113.10",
       "alertId": "wi-01",
-      "expiresAt": "2026-10-12T01:20:33.413Z",
-      "reason": "SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"
+      "expiresAt": "2026-10-12T01:33:58.814Z",
+      "reason": "반복 주입 표식: T1190 경보의 설명·수준·횟수가 함께 뒷받침함"
     },
     {
       "effect": "deny",
-      "sourceAddress": "192.0.2.15",
-      "alertId": "wi-04",
-      "expiresAt": "2026-10-12T01:20:33.413Z",
-      "reason": "SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"
-    },
-    {
-      "effect": "deny",
-      "sourceAddress": "203.0.113.22",
-      "alertId": "wi-08",
-      "expiresAt": "2026-10-12T01:20:33.413Z",
-      "reason": "SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"
+      "sourceAddress": "203.0.113.10",
+      "alertId": "wi-02",
+      "expiresAt": "2026-10-12T01:33:58.814Z",
+      "reason": "반복 주입 표식: T1190 경보의 설명·수준·횟수가 함께 뒷받침함"
     }
   ]
 }
