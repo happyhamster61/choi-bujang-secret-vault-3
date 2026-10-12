@@ -45,3 +45,9 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 [AGENTS.md](AGENTS.md)를 먼저 읽히고 한 번에 한 제작 단위만 요청하세요. 2단계부터는 자료 보호를 구현할 때 `public/data.json`을 복사하는 1단계 빌드 흐름도 함께 바꿔야 합니다. 3단계 이후의 로그인, 허용 경로, 5단계의 원본 API 주소, 6단계 이후 정책 규칙은 해당 단계 원고와 계약에 맞춰 추가합니다. 비밀번호·토큰·서버 전용 키·실제 학생 기록을 코드, Git, 제출 묶음에 넣지 않습니다.
 
 `src/decider.mjs`와 `src/detect.mjs`의 로컬 시험은 반 엔진이나 운영 심판의 결과가 아닙니다. 1단계 이후 제출 묶음 계약 `aleph.defense.submission.v2`는 `scripts/bundle.mjs`에 남아 있으며, 코딩 도구가 해당 단계의 최신 배포 주소와 Git 원격을 맞춘 뒤 사용합니다.
+
+## 보너스 XDR: 무차별 로그인 공격 연습
+
+`xdr/fixtures/brute-force.json`은 가상 Wazuh 모양 경보입니다. `xdr/brute-force/decide.mjs`는 경보를 `block`, `alert`, `record`로 분류하고, `npm run xdr:run -- brute-force` 또는 `npm run xdr -- brute-force`가 결과를 `xdr/brute-force/result.json`에 씁니다. 다시 실행해 결과를 갱신할 수 있습니다.
+
+`xdr/brute-force/respond.mjs`는 `block` 판단만 만료 시각과 경보 번호가 붙은 `deny-rules.json` 후보로 만들고, 차단·알림 판단을 `xdr/alerts.log`에 한 줄씩 덧붙입니다. 이 후보 파일은 연습 자료이며, 현재 ZTNA 판정기 `src/decider.mjs`에 자동 적용되지는 않습니다. XDR 실행 결과는 가상 경보 연습이지 운영 차단이나 심판 판정의 증거가 아닙니다.

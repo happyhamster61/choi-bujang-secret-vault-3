@@ -1,0 +1,75 @@
+{
+  "schema": "aleph.xdr.deny-candidates.v1",
+  "rules": [
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.10",
+      "alertId": "bf-01",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.10",
+      "alertId": "bf-02",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "여러 계정에 같은 비밀번호 대입"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "198.51.100.20",
+      "alertId": "bf-03",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "192.0.2.30",
+      "alertId": "bf-04",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.21",
+      "alertId": "bf-05",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "198.51.100.44",
+      "alertId": "bf-06",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.15",
+      "alertId": "bf-07",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "192.0.2.18",
+      "alertId": "bf-08",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "198.51.100.8",
+      "alertId": "bf-09",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "여러 계정에 같은 비밀번호 대입"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.40",
+      "alertId": "bf-10",
+      "expiresAt": "2026-10-12T00:57:39.030Z",
+      "reason": "짧은 시간 같은 주소의 로그인 실패 연속"
+    }
+  ]
+}
