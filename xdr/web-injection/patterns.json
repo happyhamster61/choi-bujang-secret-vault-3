@@ -1,0 +1,19 @@
+{
+  "patterns": [
+    {
+      "name": "SQL 주입 의심 표기",
+      "condition": "rule.description에 SQL 구문·SQL 표식 또는 데이터베이스 조회 구문 연결이 명시되거나 data.url의 쿼리 값에 수업용 doc-sql- 표식이 있습니다.",
+      "evidence": "MITRE ATT&CK T1190은 공개 웹 애플리케이션 악용을 다루며, wi-01·wi-04·wi-05·wi-08은 설명이나 URL에 SQL 표식을 기록합니다."
+    },
+    {
+      "name": "스크립트 주입 의심 표식",
+      "condition": "rule.description에 스크립트 삽입 표기가 있거나 data.url의 쿼리 값에 doc-script-marker 또는 doc-mixed-marker 표식이 있습니다.",
+      "evidence": "wi-02와 wi-05는 스크립트 삽입 표식을 기록하지만 실제 HTML script 태그 문자열은 없어 태그 자체는 미확인입니다."
+    },
+    {
+      "name": "반복 경로 탐색 표기",
+      "condition": "data.url의 쿼리 값에 ../ 경로 이동 구간이 반복해서 나타납니다.",
+      "evidence": "MITRE ATT&CK T1190에는 디렉터리 탐색 취약점 악용 사례가 있지만 fixture URL에는 ../ 구간이 없어 이 조건의 사례는 미확인입니다."
+    }
+  ]
+}

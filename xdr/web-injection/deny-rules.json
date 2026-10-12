@@ -1,0 +1,26 @@
+{
+  "schema": "aleph.xdr.deny-candidates.v1",
+  "rules": [
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.10",
+      "alertId": "wi-01",
+      "expiresAt": "2026-10-12T01:20:33.413Z",
+      "reason": "SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "192.0.2.15",
+      "alertId": "wi-04",
+      "expiresAt": "2026-10-12T01:20:33.413Z",
+      "reason": "SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.22",
+      "alertId": "wi-08",
+      "expiresAt": "2026-10-12T01:20:33.413Z",
+      "reason": "SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"
+    }
+  ]
+}

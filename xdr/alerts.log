@@ -17,3 +17,15 @@
 {"alertId":"bf-17","action":"alert","reason":"짧은 시간 같은 주소의 로그인 실패 연속"}
 {"alertId":"bf-18","action":"alert","reason":"짧은 시간 같은 주소의 로그인 실패 연속"}
 {"alertId":"bf-19","action":"alert","reason":"짧은 시간 같은 주소의 로그인 실패 연속"}
+{"alertId":"wi-01","action":"block","reason":"SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"}
+{"alertId":"wi-02","action":"alert","reason":"스크립트 주입 의심 표식: 실제 HTML script 태그는 확인되지 않음"}
+{"alertId":"wi-03","action":"alert","reason":"반복 경로 탐색 표기: 수업용 표식만 있고 실제 ../ 구간은 확인되지 않음"}
+{"alertId":"wi-04","action":"block","reason":"SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"}
+{"alertId":"wi-05","action":"alert","reason":"SQL 주입 의심 표기: 수업용 표식만으로 실제 구문은 확인되지 않음"}
+{"alertId":"wi-06","action":"alert","reason":"미확인 주입 흔적: 단일 또는 불명확한 표식"}
+{"alertId":"wi-07","action":"alert","reason":"반복 경로 탐색 표기: 수업용 표식만 있고 실제 ../ 구간은 확인되지 않음"}
+{"alertId":"wi-08","action":"block","reason":"SQL 주입 의심 표기: 설명에 반복된 SQL 구문 연결 표식이 기록됨"}
+{"alertId":"wi-09","action":"alert","reason":"미확인 주입 흔적: 단일 또는 불명확한 표식"}
+{"alertId":"wi-15","action":"alert","reason":"미확인 주입 흔적: 단일 또는 불명확한 표식"}
+{"alertId":"wi-16","action":"alert","reason":"미확인 주입 흔적: 단일 또는 불명확한 표식"}
+{"alertId":"wi-17","action":"alert","reason":"미확인 주입 흔적: 단일 또는 불명확한 표식"}
