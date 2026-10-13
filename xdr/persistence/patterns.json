@@ -1,0 +1,19 @@
+{
+  "patterns": [
+    {
+      "name": "서명 없는 서비스 등록 흔적",
+      "conditions": "rule.mitre에 T1543이 있고 rule.description에 '서명 없는 새 서비스' 또는 '서명 없는 서비스 등록'이 명시됩니다. data.path가 있으면 실행 파일 위치를 보조 근거로 사용하되 필수 조건으로 삼지 않습니다.",
+      "evidence": "ps-01은 서명 없는 새 서비스와 임시 폴더 실행 파일을, ps-04는 서명 없는 서비스 등록 3건을 설명하며 둘 다 T1543입니다. 서명 상태 전용 필드와 서비스 이름은 없어 설명에 기록된 신호만 확인할 수 있습니다."
+    },
+    {
+      "name": "평소 목록에 없던 예약 작업 의심",
+      "conditions": "rule.mitre에 T1053이 있고 (rule.description에 '처음 보는 예약 작업'이 명시되고 data.path가 임시 폴더 아래이거나, 설명에 '예약 작업 이름이 임의 문자열'이 명시되고 data.path가 임시 폴더 아래입니다.)",
+      "evidence": "ps-02는 처음 보는 예약 작업이 임시 폴더 프로그램을 실행한다고 기록하고 ps-05는 임의 문자열 이름과 임시 폴더 실행 파일을 함께 기록하며 둘 다 T1053입니다. 평소 목록 자체는 fixture에 없어 설명의 표현을 탐색 단서로만 사용합니다."
+    },
+    {
+      "name": "시작 폴더에 새 항목 추가 흔적",
+      "conditions": "rule.mitre에 T1543이 있고 rule.description에 '시작 폴더에 평소 목록에 없는 프로그램'이 명시되며 data.path가 Windows Start Menu\\Programs\\Startup 경로 아래입니다.",
+      "evidence": "ps-03은 해당 설명과 Startup 경로를 기록하고 fixture 태그는 T1543입니다. 다만 MITRE ATT&CK에서는 Startup Folder가 T1547.001이므로 이 태그와 ATT&CK 분류가 일치하지 않는 한계를 나타냅니다."
+    }
+  ]
+}
