@@ -96,11 +96,27 @@ function hasAmbiguousPersistenceSignal(alert) {
     && description.includes('임시 폴더에 실행 파일이 하나 생겼습니다')
     && description.includes('서비스 등록은 없습니다')
     && isTempPath(pathOf(alert));
-  const taskSignal = hasTechnique(alert, 'T1053') && /예약 작업/.test(description);
-  const startupSignal = /시작 (?:폴더|항목|프로그램)/.test(description);
+  const taskSignal = hasTechnique(alert, 'T1053') && (
+    (description.includes('수업 중 예약 작업을 하나 만들었습니다')
+      && description.includes('서명은 확인되지 않았습니다'))
+    || description.includes('예약 작업이 하나 있고 실행 시각은 수업 시간')
+    || (description.includes('예약 작업 이름이 수업 과제와 비슷')
+      && description.includes('만든 사람은'))
+  );
+  const startupSignal = hasTechnique(alert, 'T1543') && (
+    (description.includes('시작 항목에 수업 도구 이름이 하나 있습니다')
+      && description.includes('서명은 아직 모릅니다'))
+    || (description.includes('시작 폴더 변경이 1건입니다')
+      && description.includes('이어서 실행된 기록은 없습니다'))
+  );
   const serviceSignal = hasTechnique(alert, 'T1543')
-    && /서비스/.test(description)
-    && !/서비스 등록은 없습니다/.test(description);
+    && (
+      (description.includes('평소 목록에 없는 서비스가 다시 켜도 남도록 등록됐습니다')
+        && isTempPath(pathOf(alert)))
+      || (description.includes('서비스 설명만 한 번 바뀌었습니다')
+        && description.includes('실행 파일은 그대로입니다'))
+      || description.includes('서비스가 한 번 멈췄다가 같은 파일로 다시 시작됐습니다')
+    );
   return unregisteredTempExecutable || taskSignal || startupSignal || serviceSignal;
 }
 
