@@ -6,103 +6,103 @@
       "alertId": "pv-01",
       "action": "alert",
       "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"
+      "reason": "관리자 그룹 추가: 단일 또는 불완전한 의심 신호"
     },
     {
       "alertId": "pv-02",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "T1068·T1078 및 관리자 승격 직후 명령: 여러 독립 신호가 일치함"
     },
     {
       "alertId": "pv-03",
-      "action": "alert",
-      "confidence": 0.8,
-      "reason": "처음 보는 주소의 관리자 명령, 시간 외로 기록된 권한 사용: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "처음 보는 주소의 관리자 명령; 시간 외로 기록된 권한 사용; 처음 보는 주소의 관리자 명령과 시간 외 사용: 여러 독립 신호가 일치함"
     },
     {
       "alertId": "pv-04",
-      "action": "alert",
-      "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "관리자 그룹 추가; 관리자 그룹 추가 직후 권한 명령: 여러 독립 신호가 일치함"
     },
     {
       "alertId": "pv-05",
-      "action": "alert",
-      "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "관리자 그룹 추가; 같은 주소에서 여러 계정을 관리자 그룹에 추가: 여러 독립 신호가 일치함"
     },
     {
       "alertId": "pv-06",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
     },
     {
       "alertId": "pv-07",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가, 시간 외로 기록된 권한 사용: 여러 신호가 함께 일치하는 차단 판단이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"
+      "reason": "관리자 그룹 추가; 시간 외로 기록된 권한 사용; 관리자 그룹 추가와 시간 외 사용 및 T1068·T1078: 여러 독립 신호가 일치함"
     },
     {
       "alertId": "pv-08",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
     },
     {
       "alertId": "pv-09",
       "action": "alert",
       "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"
+      "reason": "관리자 그룹 추가: 단일 또는 불완전한 의심 신호"
     },
     {
       "alertId": "pv-10",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
     },
     {
       "alertId": "pv-11",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
     },
     {
       "alertId": "pv-12",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
     },
     {
       "alertId": "pv-13",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
     },
     {
       "alertId": "pv-14",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
     },
     {
       "alertId": "pv-15",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
     },
     {
       "alertId": "pv-16",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
     },
     {
       "alertId": "pv-17",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
     },
     {
       "alertId": "pv-18",
@@ -160,8 +160,8 @@
     }
   ],
   "counts": {
-    "block": 1,
-    "alert": 5,
-    "record": 20
+    "block": 5,
+    "alert": 8,
+    "record": 13
   }
 }
