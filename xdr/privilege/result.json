@@ -5,163 +5,163 @@
     {
       "alertId": "pv-01",
       "action": "alert",
-      "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 단일 또는 불완전한 의심 신호"
+      "confidence": 0.6,
+      "reason": "권한 관련 시도 또는 단일 변경 신호가 있으나 확정 근거가 부족함"
     },
     {
       "alertId": "pv-02",
       "action": "block",
       "confidence": 0.9,
-      "reason": "T1068·T1078 및 관리자 승격 직후 명령: 여러 독립 신호가 일치함"
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-03",
       "action": "block",
       "confidence": 0.9,
-      "reason": "처음 보는 주소의 관리자 명령; 시간 외로 기록된 권한 사용; 처음 보는 주소의 관리자 명령과 시간 외 사용: 여러 독립 신호가 일치함"
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-04",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가; 관리자 그룹 추가 직후 권한 명령: 여러 독립 신호가 일치함"
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-05",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가; 같은 주소에서 여러 계정을 관리자 그룹에 추가: 여러 독립 신호가 일치함"
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-06",
-      "action": "alert",
-      "confidence": 0.6,
-      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-07",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가; 시간 외로 기록된 권한 사용; 관리자 그룹 추가와 시간 외 사용 및 T1068·T1078: 여러 독립 신호가 일치함"
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-08",
-      "action": "alert",
-      "confidence": 0.6,
-      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-09",
-      "action": "alert",
-      "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 단일 또는 불완전한 의심 신호"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "성공한 권한 변경 또는 관리자 권한 사용과 추가 위험 신호가 함께 확인됨"
     },
     {
       "alertId": "pv-10",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
+      "reason": "권한 상승 요청이 취소되어 시도만 확인됨"
     },
     {
       "alertId": "pv-11",
       "action": "record",
       "confidence": 0.1,
-      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
+      "reason": "명시적인 비관리자 그룹 작업 또는 권한 변경 없는 조회"
     },
     {
       "alertId": "pv-12",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
+      "reason": "권한 관련 시도 또는 단일 변경 신호가 있으나 확정 근거가 부족함"
     },
     {
       "alertId": "pv-13",
       "action": "record",
       "confidence": 0.1,
-      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
+      "reason": "명시적인 비관리자 그룹 작업 또는 권한 변경 없는 조회"
     },
     {
       "alertId": "pv-14",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
+      "reason": "권한 상승 흔적은 있으나 후속 명령이 확인되지 않음"
     },
     {
       "alertId": "pv-15",
       "action": "record",
       "confidence": 0.1,
-      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
+      "reason": "명시적인 비관리자 그룹 작업 또는 권한 변경 없는 조회"
     },
     {
       "alertId": "pv-16",
       "action": "alert",
       "confidence": 0.6,
-      "reason": "T1068 및 설명에 권한 명령·변경 시도가 있으나 확인 신호가 부족함"
+      "reason": "관리자 명령 실패로 성공 여부가 확인되지 않음"
     },
     {
       "alertId": "pv-17",
       "action": "record",
       "confidence": 0.1,
-      "reason": "비관리자 그룹 또는 변경 없는 조회만 확인되어 record"
+      "reason": "명시적인 비관리자 그룹 작업 또는 권한 변경 없는 조회"
     },
     {
       "alertId": "pv-18",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-19",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "명시적인 비관리자 그룹 작업 또는 권한 변경 없는 조회"
     },
     {
       "alertId": "pv-20",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-21",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-22",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-23",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-24",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-25",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     },
     {
       "alertId": "pv-26",
       "action": "record",
       "confidence": 0.1,
-      "reason": "일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"
+      "reason": "권한 악용 신호가 확인되지 않음"
     }
   ],
   "counts": {
-    "block": 5,
-    "alert": 8,
+    "block": 8,
+    "alert": 5,
     "record": 13
   }
 }
