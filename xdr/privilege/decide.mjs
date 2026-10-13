@@ -53,8 +53,6 @@ export function decide(alert) {
     groupChange: ['관리자 그룹에 추가됐습니다', '관리자 그룹에 들어가고', '관리자 그룹 추가와', '다시 관리자로 들어왔습니다']
       .some((phrase) => lower.includes(phrase)),
     unfamiliarAddress: lower.includes('처음 보는 주소') || lower.includes('요청 주소는 처음 봅니다'),
-    usualAddress: lower.includes('평소 주소'),
-    singleAdminCommand: lower.includes('관리자 명령이 한 번 실행됐습니다'),
     outsideHours: lower.includes('수업 시간 밖') || lower.includes('업무처럼 보이지 않는 시각'),
     adminCommand: lower.includes('관리자 명령'),
     commandSucceeded: lower.includes('관리자 명령을 실행했습니다')
@@ -79,15 +77,6 @@ export function decide(alert) {
   if (noChange) {
     return { action: 'record', confidence: 0.1,
       reason: '정상 신호: 권한 변경 없는 조회 또는 그룹 설명만 수정' };
-  }
-
-  const isolatedRoutineCommand = context.t1068 && context.usualAddress
-    && context.singleAdminCommand && !context.unfamiliarAddress && !context.outsideHours
-    && !context.adminGroup && !lower.includes('권한 상승')
-    && !lower.includes('다른 계정의 권한');
-  if (isolatedRoutineCommand) {
-    return { action: 'record', confidence: 0.1,
-      reason: '정상 신호: 평소 주소의 단발 관리자 명령이며 추가 권한 악용 징후 없음' };
   }
 
   const nonAdminMembershipPattern = matched.find((pattern) => pattern.name === '비관리자 그룹 멤버 변경');
