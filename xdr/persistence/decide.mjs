@@ -54,6 +54,19 @@ function findStrongPattern(alert) {
   const count = Number(alert?.data?.count);
 
   if (hasTechnique(alert, 'T1543')
+      && description.includes('서비스 실행 파일이 바뀌었고 서명이 없습니다')
+      && isTempPath(path)) {
+    return PATTERNS[0];
+  }
+
+  if (hasTechnique(alert, 'T1543')
+      && hasTechnique(alert, 'T1053')
+      && description.includes('시작 프로그램과 예약 작업이 같은 임시 파일을 함께 가리킵니다')
+      && isTempPath(path)) {
+    return PATTERNS[1];
+  }
+
+  if (hasTechnique(alert, 'T1543')
       && ((description.includes('서명 없는 새 서비스') && isTempPath(path))
         || (description.includes('서명 없는 서비스 등록') && Number.isFinite(count) && count >= 3))) {
     return PATTERNS[0];
@@ -78,12 +91,17 @@ function hasAmbiguousPersistenceSignal(alert) {
   const level = levelOf(alert);
   if (level < 5) return false;
   const description = descriptionOf(alert);
+  const unregisteredTempExecutable = hasTechnique(alert, 'T1543')
+    && level >= 8
+    && description.includes('임시 폴더에 실행 파일이 하나 생겼습니다')
+    && description.includes('서비스 등록은 없습니다')
+    && isTempPath(pathOf(alert));
   const taskSignal = hasTechnique(alert, 'T1053') && /예약 작업/.test(description);
   const startupSignal = /시작 (?:폴더|항목|프로그램)/.test(description);
   const serviceSignal = hasTechnique(alert, 'T1543')
     && /서비스/.test(description)
     && !/서비스 등록은 없습니다/.test(description);
-  return taskSignal || startupSignal || serviceSignal;
+  return unregisteredTempExecutable || taskSignal || startupSignal || serviceSignal;
 }
 
 export function decide(alert) {
