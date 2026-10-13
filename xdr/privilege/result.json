@@ -1,0 +1,167 @@
+{
+  "schema": "aleph.xdr.result.v1",
+  "moduleKey": "privilege",
+  "decisions": [
+    {
+      "alertId": "pv-01",
+      "action": "alert",
+      "confidence": 0.72,
+      "reason": "관리자 그룹에 계정 추가: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-02",
+      "action": "alert",
+      "confidence": 0.61,
+      "reason": "관리자 명령의 불완전한 의심 신호: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-03",
+      "action": "alert",
+      "confidence": 0.79,
+      "reason": "처음 보는 주소에서 관리자 명령 실행, 업무 시간 외 관리자 권한 사용: 이력·업무 시간 기준은 설명에만 있어 독립 확인되지 않았습니다."
+    },
+    {
+      "alertId": "pv-04",
+      "action": "block",
+      "confidence": 0.93,
+      "reason": "관리자 그룹에 계정 추가: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-05",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "관리자 그룹에 계정 추가: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-06",
+      "action": "alert",
+      "confidence": 0.76,
+      "reason": "처음 보는 주소의 관리자 권한 세션 변경: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-07",
+      "action": "block",
+      "confidence": 0.93,
+      "reason": "관리자 그룹에 계정 추가, 업무 시간 외 관리자 권한 사용: 이력·업무 시간 기준은 설명에만 있어 독립 확인되지 않았습니다."
+    },
+    {
+      "alertId": "pv-08",
+      "action": "alert",
+      "confidence": 0.73,
+      "reason": "다른 계정 권한으로 관리자 명령 실행: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-09",
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "관리자 그룹에 계정 추가: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-10",
+      "action": "alert",
+      "confidence": 0.58,
+      "reason": "취소된 권한 상승 시도: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-11",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-12",
+      "action": "record",
+      "confidence": 0.2,
+      "reason": "평소 주소의 단발 관리자 명령이며 추가 이상 단서는 확인되지 않음: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-13",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-14",
+      "action": "alert",
+      "confidence": 0.62,
+      "reason": "후속 관리자 명령이 없는 권한 상승 단서: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-15",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-16",
+      "action": "alert",
+      "confidence": 0.61,
+      "reason": "관리자 명령의 불완전한 의심 신호: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
+    },
+    {
+      "alertId": "pv-17",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-18",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-19",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-20",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-21",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-22",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-23",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-24",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-25",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    },
+    {
+      "alertId": "pv-26",
+      "action": "record",
+      "confidence": 0.05,
+      "reason": "세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다."
+    }
+  ],
+  "counts": {
+    "block": 4,
+    "alert": 8,
+    "record": 14
+  }
+}
