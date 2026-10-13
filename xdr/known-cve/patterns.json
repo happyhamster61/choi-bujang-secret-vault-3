@@ -1,0 +1,14 @@
+{
+  "patterns": [
+    {
+      "name": "Log4Shell JNDI 원격 조회 표현식",
+      "condition": "data.useragent 또는 data.url 같은 요청 헤더·매개변수 값에 ${jndi:<protocol>://...} 형태의 완전한 표현식이 있고 protocol이 ldap, ldaps, rmi 또는 dns입니다.",
+      "evidence": "kc-01~kc-08의 useragent 또는 url에 ${jndi:ldap://...}가 실제로 있으며 MITRE ATT&CK T1190은 공개 애플리케이션 악용을 다룹니다. Apache와 CISA는 CVE-2021-44228의 공격자 제어 JNDI 원격 엔드포인트를, CERT/CC는 LDAP·RMI·DNS 예를 설명합니다."
+    },
+    {
+      "name": "알려진 취약점 probe 점검 흔적 (의심)",
+      "condition": "rule.description에 알려진 취약점 점검 흔적이 명시되고 data.url의 /health 경로에 probe 매개변수가 있습니다. 스캐너 제품명이나 User-Agent는 조건에 포함하지 않습니다.",
+      "evidence": "kc-05의 설명에는 취약점 점검 흔적이 명시되고 url은 /health?probe=... 형태지만, fixture에는 스캐너 이름이나 전용 User-Agent가 없어 이를 특정 도구로 단정할 수 없습니다."
+    }
+  ]
+}
