@@ -9,6 +9,11 @@ const PATTERNS = Object.freeze({
     condition: 'rule.description에 알려진 취약점 점검 흔적이 있고 data.url의 /health 경로에 probe 매개변수가 있습니다.',
     evidence: 'kc-05에 해당 설명과 /health?probe= 경로가 있으나 특정 스캐너나 User-Agent는 확인되지 않습니다.',
   }),
+  weakExploration: Object.freeze({
+    name: 'T1190 약한 취약점 탐색 흔적',
+    condition: 'rule.mitre에 T1190이 있고 rule.level이 5~8이며, 완전한 JNDI 원격 조회 표현식 없이 경보 설명·요청 주소·User-Agent에 CVE 이름 검색, 단독 jndi, 취약점 목록, 중괄호, 도구 유사 문구, 라이브러리 언급 또는 잘린 조회 흔적이 있습니다.',
+    evidence: 'known-cve fixture kc-09~kc-16에 해당하는 약한 흔적과 T1190, 수준 5~8이 있고 완전한 원격 조회 표현식은 없습니다.',
+  }),
 });
 
 const CONFIDENCE = Object.freeze({
@@ -43,6 +48,19 @@ function hasSuspiciousProbe(alert) {
   return explicitProbeClue && probePath;
 }
 
+function hasWeakExploration(alert) {
+  const mitre = alert?.rule?.mitre;
+  const level = alert?.rule?.level;
+  if (!Array.isArray(mitre) || !mitre.includes('T1190')
+      || !Number.isInteger(level) || level < 5 || level > 8) return false;
+
+  const text = [alert?.rule?.description, alert?.data?.url, alert?.data?.useragent]
+    .filter((value) => typeof value === 'string')
+    .join(' ')
+    .toLocaleLowerCase();
+  return /cve-2021-44228|\bjndi\b|취약점 목록|중괄호|점검 도구와 비슷한|라이브러리 이름|조회 형태가 잘린|취약점 이름 검색/.test(text);
+}
+
 export function decide(alert) {
   if (hasClearJndiLookup(alert)) {
     return decision(CONFIDENCE.clear, `${PATTERNS.clearLog4Shell.name}: 요청 값에서 완전한 JNDI 원격 조회 표현식을 확인함`);
@@ -50,6 +68,10 @@ export function decide(alert) {
 
   if (hasSuspiciousProbe(alert)) {
     return decision(CONFIDENCE.suspicious, `${PATTERNS.suspiciousProbe.name}: 점검 설명과 probe 경로가 있으나 악용 표현식은 확인되지 않음`);
+  }
+
+  if (hasWeakExploration(alert)) {
+    return decision(CONFIDENCE.suspicious, `${PATTERNS.weakExploration.name}: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음`);
   }
 
   return decision(CONFIDENCE.none, '일치 패턴 없음: 공격 근거 부족');

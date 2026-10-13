@@ -9,6 +9,11 @@
       "name": "알려진 취약점 probe 점검 흔적 (의심)",
       "condition": "rule.description에 알려진 취약점 점검 흔적이 명시되고 data.url의 /health 경로에 probe 매개변수가 있습니다. 스캐너 제품명이나 User-Agent는 조건에 포함하지 않습니다.",
       "evidence": "kc-05의 설명에는 취약점 점검 흔적이 명시되고 url은 /health?probe=... 형태지만, fixture에는 스캐너 이름이나 전용 User-Agent가 없어 이를 특정 도구로 단정할 수 없습니다."
+    },
+    {
+      "name": "T1190 약한 취약점 탐색 흔적",
+      "condition": "rule.mitre에 T1190이 있고 rule.level이 5~8이며, 완전한 JNDI 원격 조회 표현식은 없지만 설명·data.url·data.useragent에 취약점 이름 검색, 단독 jndi 단어, 단일 중괄호, 도구 유사 문구, 라이브러리 언급, 잘린 조회 조각 등의 약한 흔적이 있습니다.",
+      "evidence": "kc-09~kc-16은 T1190과 수준 5~8 및 각기 다른 약한 흔적이 있지만 완전한 표현식은 없고, 정상 kc-17~kc-24는 MITRE 태그가 비어 있으며 수준 2~3입니다."
     }
   ]
 }

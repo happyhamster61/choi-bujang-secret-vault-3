@@ -1,4 +1,4 @@
-import { appendFile, readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { decide } from './decide.mjs';
@@ -32,26 +32,13 @@ export function createDenyCandidate(alert, decision, now = new Date()) {
   };
 }
 
-async function readLoggedAlertIds(logPath) {
-  let contents;
+async function readLogContents(logPath) {
   try {
-    contents = await readFile(logPath, 'utf8');
+    return await readFile(logPath, 'utf8');
   } catch (error) {
-    if (error?.code === 'ENOENT') return new Set();
+    if (error?.code === 'ENOENT') return '';
     throw error;
   }
-
-  const ids = new Set();
-  for (const line of contents.split(/\r?\n/u)) {
-    if (!line.trim()) continue;
-    try {
-      const entry = JSON.parse(line);
-      if (typeof entry?.alertId === 'string') ids.add(entry.alertId);
-    } catch {
-      // Keep existing lines intact; malformed lines cannot identify an alert.
-    }
-  }
-  return ids;
 }
 
 export async function processFixture({ root, now = new Date() }) {
@@ -64,10 +51,11 @@ export async function processFixture({ root, now = new Date() }) {
   }
 
   const denyCandidates = [];
-  const logLines = [];
   const counts = { block: 0, alert: 0, record: 0 };
   const logPath = join(root, 'xdr', 'alerts.log');
-  const loggedIds = await readLoggedAlertIds(logPath);
+  const previousLog = await readLogContents(logPath);
+  const fixtureIds = new Set();
+  const expectedLines = new Map();
 
   for (const alert of fixture.alerts) {
     const result = await decide(alert);
@@ -86,21 +74,45 @@ export async function processFixture({ root, now = new Date() }) {
     if (typeof alert?.id !== 'string' || !alert.id.trim()) {
       throw new Error('경보에 기록할 id가 없습니다.');
     }
-    if (!loggedIds.has(alert.id)) {
-      logLines.push(JSON.stringify({
-        alertId: alert.id,
-        action: result.action,
-        reason: redactSecretLikeText(result.reason),
-      }));
-      loggedIds.add(alert.id);
+    fixtureIds.add(alert.id);
+    expectedLines.set(alert.id, JSON.stringify({
+      alertId: alert.id,
+      action: result.action,
+      reason: redactSecretLikeText(result.reason),
+    }));
+  }
+
+  const hadTrailingNewline = /(?:\r?\n)$/.test(previousLog);
+  const newline = previousLog.includes('\r\n') ? '\r\n' : '\n';
+  const previousLines = previousLog.split(/\r?\n/u);
+  if (hadTrailingNewline) previousLines.pop();
+  const seen = new Set();
+  const nextLines = [];
+  let updatedAlerts = 0;
+  for (const line of previousLines) {
+    let alertId;
+    try { alertId = JSON.parse(line)?.alertId; } catch { /* Preserve unrelated or malformed lines. */ }
+    if (typeof alertId !== 'string' || !fixtureIds.has(alertId)) {
+      nextLines.push(line);
+      continue;
     }
+    if (seen.has(alertId)) continue;
+    seen.add(alertId);
+    const expected = expectedLines.get(alertId);
+    nextLines.push(expected);
+    if (line !== expected) updatedAlerts += 1;
   }
-
-  if (logLines.length > 0) {
-    await appendFile(logPath, `${logLines.join('\n')}\n`, 'utf8');
+  let loggedAlerts = 0;
+  for (const alert of fixture.alerts) {
+    if (seen.has(alert.id)) continue;
+    nextLines.push(expectedLines.get(alert.id));
+    seen.add(alert.id);
+    loggedAlerts += 1;
   }
+  const nextLog = nextLines.length ? `${nextLines.join(newline)}${newline}` : '';
+  if (nextLog !== previousLog) await writeFile(logPath, nextLog, 'utf8');
 
-  return { counts, denyCandidates, loggedAlerts: logLines.length };
+  return { counts, denyCandidates, loggedAlerts, updatedAlerts };
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -108,7 +120,7 @@ if (isMain) {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
   try {
     const result = await processFixture({ root });
-    process.stdout.write(`${JSON.stringify({ counts: result.counts, denyCandidates: result.denyCandidates, loggedAlerts: result.loggedAlerts })}\n`);
+    process.stdout.write(`${JSON.stringify({ counts: result.counts, denyCandidates: result.denyCandidates, loggedAlerts: result.loggedAlerts, updatedAlerts: result.updatedAlerts })}\n`);
     process.stdout.write('차단 후보는 기존 형식의 메모리 결과이며 ZTNA 규칙에 자동 적용되지 않습니다.\n');
   } catch (error) {
     process.stderr.write(`응답 처리 첫 오류: ${error instanceof Error ? error.message : '실행 오류'}\n`);

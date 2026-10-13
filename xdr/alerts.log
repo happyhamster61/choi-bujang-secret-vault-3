@@ -42,14 +42,14 @@
 {"alertId":"kc-06","action":"block","reason":"Log4Shell JNDI 원격 조회 표현식: 요청 값에서 완전한 JNDI 원격 조회 표현식을 확인함"}
 {"alertId":"kc-07","action":"block","reason":"Log4Shell JNDI 원격 조회 표현식: 요청 값에서 완전한 JNDI 원격 조회 표현식을 확인함"}
 {"alertId":"kc-08","action":"block","reason":"Log4Shell JNDI 원격 조회 표현식: 요청 값에서 완전한 JNDI 원격 조회 표현식을 확인함"}
-{"alertId":"kc-09","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-10","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-11","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-12","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-13","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-14","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-15","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
-{"alertId":"kc-16","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
+{"alertId":"kc-09","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-10","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-11","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-12","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-13","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-14","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-15","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
+{"alertId":"kc-16","action":"alert","reason":"T1190 약한 취약점 탐색 흔적: T1190 및 약한 탐색 흔적은 있으나 완전한 악용 표현식은 확인되지 않음"}
 {"alertId":"kc-17","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
 {"alertId":"kc-18","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
 {"alertId":"kc-19","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
