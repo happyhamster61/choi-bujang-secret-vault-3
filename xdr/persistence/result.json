@@ -34,69 +34,69 @@
     },
     {
       "alertId": "ps-06",
-      "action": "alert",
-      "confidence": 0.65,
-      "reason": "서명 없는 서비스 등록 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "변경된 미서명 서비스 실행 파일: 경보의 기법·설명과 요청된 보조 필드가 함께 일치함 (서명 상태는 전용 필드가 아니라 경보 설명에 기록된 내용을 근거로 함)"
     },
     {
       "alertId": "ps-07",
-      "action": "alert",
-      "confidence": 0.65,
-      "reason": "평소 목록에 없던 예약 작업 의심: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "서비스와 예약 작업의 동일 임시 파일 사용: 경보의 기법·설명과 요청된 보조 필드가 함께 일치함"
     },
     {
       "alertId": "ps-08",
-      "action": "alert",
-      "confidence": 0.65,
-      "reason": "서명 없는 서비스 등록 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "목록 외 서비스의 재부팅 후 지속: 경보의 기법·설명과 요청된 보조 필드가 함께 일치함 (기준 목록과의 대조는 별도 필드가 아니라 경보 설명에 기록된 내용을 근거로 함)"
     },
     {
       "alertId": "ps-09",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "평소 목록에 없던 예약 작업 의심: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "검증이 덜 된 예약 작업 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-10",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "시작 폴더에 새 항목 추가 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "확인되지 않은 시작 항목 변경: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-11",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "서명 없는 서비스 등록 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "확인이 더 필요한 서비스 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-12",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "평소 목록에 없던 예약 작업 의심: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "검증이 덜 된 예약 작업 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-13",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "일치 패턴 없음: 정상 이벤트이거나 지속성 악용 근거가 부족함"
+      "action": "alert",
+      "confidence": 0.65,
+      "reason": "서비스 미등록 상태의 임시 실행 파일: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-14",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "시작 폴더에 새 항목 추가 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "확인되지 않은 시작 항목 변경: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-15",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "평소 목록에 없던 예약 작업 의심: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "검증이 덜 된 예약 작업 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-16",
       "action": "alert",
       "confidence": 0.65,
-      "reason": "서명 없는 서비스 등록 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
+      "reason": "확인이 더 필요한 서비스 흔적: 관련 ATT&CK 태그와 설명은 있으나 강한 패턴 조건이 충족되지 않음"
     },
     {
       "alertId": "ps-17",
@@ -148,8 +148,8 @@
     }
   ],
   "counts": {
-    "block": 5,
-    "alert": 10,
-    "record": 9
+    "block": 8,
+    "alert": 8,
+    "record": 8
   }
 }
