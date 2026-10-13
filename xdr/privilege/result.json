@@ -4,9 +4,9 @@
   "decisions": [
     {
       "alertId": "pv-01",
-      "action": "alert",
-      "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 패턴 신호는 있으나 명확한 복합 악용 근거가 부족함"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "관리자 그룹 추가: T1078과 administrators 그룹 변경이 함께 확인됨"
     },
     {
       "alertId": "pv-02",
@@ -24,13 +24,13 @@
       "alertId": "pv-04",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가: 권한 변경·사용과 추가 위험 근거가 함께 확인됨"
+      "reason": "관리자 그룹 추가: T1078과 administrators 그룹 변경이 함께 확인됨"
     },
     {
       "alertId": "pv-05",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가: 권한 변경·사용과 추가 위험 근거가 함께 확인됨"
+      "reason": "관리자 그룹 추가: T1078과 administrators 그룹 변경이 함께 확인됨"
     },
     {
       "alertId": "pv-06",
@@ -42,7 +42,7 @@
       "alertId": "pv-07",
       "action": "block",
       "confidence": 0.9,
-      "reason": "관리자 그룹 추가, 시간 외로 기록된 권한 사용: 권한 변경·사용과 추가 위험 근거가 함께 확인됨"
+      "reason": "관리자 그룹 추가: T1078과 administrators 그룹 변경이 함께 확인됨"
     },
     {
       "alertId": "pv-08",
@@ -52,9 +52,9 @@
     },
     {
       "alertId": "pv-09",
-      "action": "alert",
-      "confidence": 0.68,
-      "reason": "관리자 그룹 추가: 패턴 신호는 있으나 명확한 복합 악용 근거가 부족함"
+      "action": "block",
+      "confidence": 0.9,
+      "reason": "관리자 그룹 추가: T1078과 administrators 그룹 변경이 함께 확인됨"
     },
     {
       "alertId": "pv-10",
@@ -64,9 +64,9 @@
     },
     {
       "alertId": "pv-11",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "정상 신호: 명시적 비관리자 그룹 작업"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "비관리자 그룹 멤버 변경: 그룹 멤버 변경은 있으나 관리자 권한 악용은 불분명함"
     },
     {
       "alertId": "pv-12",
@@ -78,7 +78,7 @@
       "alertId": "pv-13",
       "action": "record",
       "confidence": 0.1,
-      "reason": "정상 신호: 권한 변경 없는 조회"
+      "reason": "정상 신호: 권한 변경 없는 조회 또는 그룹 설명만 수정"
     },
     {
       "alertId": "pv-14",
@@ -88,9 +88,9 @@
     },
     {
       "alertId": "pv-15",
-      "action": "record",
-      "confidence": 0.1,
-      "reason": "정상 신호: 명시적 비관리자 그룹 작업"
+      "action": "alert",
+      "confidence": 0.6,
+      "reason": "비관리자 그룹 멤버 변경: 그룹 멤버 변경은 있으나 관리자 권한 악용은 불분명함"
     },
     {
       "alertId": "pv-16",
@@ -102,7 +102,7 @@
       "alertId": "pv-17",
       "action": "record",
       "confidence": 0.1,
-      "reason": "정상 신호: 권한 변경 없는 조회"
+      "reason": "정상 신호: 권한 변경 없는 조회 또는 그룹 설명만 수정"
     },
     {
       "alertId": "pv-18",
@@ -114,7 +114,7 @@
       "alertId": "pv-19",
       "action": "record",
       "confidence": 0.1,
-      "reason": "정상 신호: 권한 변경 없는 조회"
+      "reason": "정상 신호: 권한 변경 없는 조회 또는 그룹 설명만 수정"
     },
     {
       "alertId": "pv-20",
@@ -160,8 +160,8 @@
     }
   ],
   "counts": {
-    "block": 7,
+    "block": 9,
     "alert": 6,
-    "record": 13
+    "record": 11
   }
 }

@@ -24,6 +24,14 @@ const PATTERNS = Object.freeze([
         && (context.adminCommand || context.groupChange);
     },
   }),
+  Object.freeze({
+    name: '비관리자 그룹 멤버 변경',
+    conditions: "T1078 또는 그룹 필드와 함께 관리자 이외 그룹의 멤버 추가나 새 그룹·멤버 지정이 설명에 기록됨",
+    evidence: '일반 그룹 멤버 변경은 접근 범위에 영향을 줄 수 있지만 관리자 권한 악용이 확인되지 않아 경보로 남깁니다.',
+    matches(alert, context) {
+      return context.nonAdminGroup && context.membershipChange;
+    },
+  }),
 ]);
 
 function hasTechnique(alert, technique) {
@@ -52,21 +60,37 @@ export function decide(alert) {
       || lower.includes('권한 명령을 실행했습니다')
       || lower.includes('명령 실행이 같이 있습니다')
       || lower.includes('관리자 명령이 실행됐습니다'),
+    nonAdminGroup: group !== '' && group !== 'administrators',
+    membershipChange: lower.includes('그룹에 추가됐습니다')
+      || lower.includes('그룹이 하나 만들어졌습니다')
+      || lower.includes('멤버는'),
+    groupDescriptionOnly: lower.includes('그룹 설명만 바뀌었습니다'),
   };
   const matched = PATTERNS.filter((pattern) => pattern.matches(alert, context));
   const names = matched.map((pattern) => pattern.name);
   const failed = lower.includes('실패');
   const canceled = lower.includes('취소됐습니다');
   const noFollowup = lower.includes('이어서 명령은 없습니다');
-  const nonAdminGroup = group !== '' && group !== 'administrators'
-    && (lower.includes('관리자 그룹은 아닙니다') || lower.includes('과제 그룹')
-      || lower.includes('새 로컬 그룹'));
   const noChange = lower.includes('변경은 없습니다') || lower.includes('그룹 목록을 읽은 뒤')
-    || lower.includes('그룹 소속을 읽기만');
+    || lower.includes('그룹 소속을 읽기만') || context.groupDescriptionOnly;
 
-  if (nonAdminGroup || noChange) {
+  if (noChange) {
     return { action: 'record', confidence: 0.1,
-      reason: `정상 신호: ${nonAdminGroup ? '명시적 비관리자 그룹 작업' : '권한 변경 없는 조회'}` };
+      reason: '정상 신호: 권한 변경 없는 조회 또는 그룹 설명만 수정' };
+  }
+
+  const nonAdminMembershipPattern = matched.find((pattern) => pattern.name === '비관리자 그룹 멤버 변경');
+  if (nonAdminMembershipPattern) {
+    const confidence = 0.6;
+    return { action: actionFor(confidence), confidence,
+      reason: `${nonAdminMembershipPattern.name}: 그룹 멤버 변경은 있으나 관리자 권한 악용은 불분명함` };
+  }
+
+  const adminGroupPattern = matched.find((pattern) => pattern.name === '관리자 그룹 추가');
+  if (adminGroupPattern) {
+    const confidence = 0.9;
+    return { action: actionFor(confidence), confidence,
+      reason: `${adminGroupPattern.name}: T1078과 administrators 그룹 변경이 함께 확인됨` };
   }
 
   const level = Number(alert?.rule?.level);
