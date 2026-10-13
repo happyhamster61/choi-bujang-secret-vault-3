@@ -58,3 +58,29 @@
 {"alertId":"kc-22","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
 {"alertId":"kc-23","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
 {"alertId":"kc-24","action":"record","reason":"일치 패턴 없음: 공격 근거 부족"}
+{"alertId":"pv-01","action":"alert","confidence":0.68,"reason":"관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"}
+{"alertId":"pv-02","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-03","action":"alert","confidence":0.8,"reason":"처음 보는 주소의 관리자 명령, 시간 외로 기록된 권한 사용: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"}
+{"alertId":"pv-04","action":"alert","confidence":0.68,"reason":"관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"}
+{"alertId":"pv-05","action":"alert","confidence":0.68,"reason":"관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"}
+{"alertId":"pv-06","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-07","action":"block","confidence":0.9,"reason":"관리자 그룹 추가, 시간 외로 기록된 권한 사용: 여러 신호가 함께 일치하는 차단 판단이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"}
+{"alertId":"pv-08","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-09","action":"alert","confidence":0.68,"reason":"관리자 그룹 추가: 로그 신호 일치이며 계정 탈취 또는 권한 상승 성공 자체를 확정하지 않음"}
+{"alertId":"pv-10","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-11","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-12","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-13","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-14","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-15","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-16","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-17","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-18","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-19","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-20","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-21","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-22","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-23","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-24","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-25","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
+{"alertId":"pv-26","action":"record","confidence":0.1,"reason":"일치 패턴 없음: 현재 경보 필드에서 권한 악용 근거가 부족함"}
