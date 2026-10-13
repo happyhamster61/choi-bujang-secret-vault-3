@@ -75,29 +75,31 @@ export function decide(alert) {
   if (matched.length > 0) {
     const scores = matched.map((pattern) => {
       reasons.push(pattern.name);
-      if (pattern.name === '관리자 그룹에 계정 추가') return 0.69;
+      if (pattern.name === '관리자 그룹에 계정 추가') return 0.86;
       if (pattern.name === '처음 보는 주소에서 관리자 명령 실행') return 0.76;
       return 0.65;
     });
     confidence = Math.max(...scores);
 
-    // A recorded admin-group change followed by command execution, or a repeated/bulk
-    // membership change, provides stronger corroboration than the pattern alone.
+    // The exact admin-group pattern already requires the structured group, T1078,
+    // and an add/re-add description. Keep its corroborated scores stable.
     const count = Number(alert?.data?.count);
     const repeatedOrBulk = Number.isFinite(count) && count > 1
       || /계정\s*\d+개|다시\s*관리자|1분\s*뒤에\s*다시/.test(description);
-    if (adminGroupChange && adminCommand) confidence += 0.21;
-    else if (adminGroupChange && repeatedOrBulk) confidence += 0.18;
-
-    // High rule level is only a small corroborating factor after a pattern matched.
-    if (level >= 10) confidence += 0.03;
+    const matchedAdminGroupPattern = matched.some((pattern) => pattern.name === '관리자 그룹에 계정 추가');
+    if (matchedAdminGroupPattern) {
+      if (adminGroupChange && adminCommand) confidence = Math.max(confidence, 0.93);
+      else if (adminGroupChange && repeatedOrBulk) confidence = Math.max(confidence, 0.9);
+      else confidence = Math.max(confidence, 0.86);
+    } else {
+      // A second distinct source pattern is corroboration, not a full second score.
+      confidence += 0.07 * Math.max(0, matched.length - 1);
+      // Rule level only contributes after one or more defined patterns matched.
+      if (level >= 10) confidence += 0.03;
+    }
 
     // The first-seen-address and out-of-hours claims are description-only and cannot
-    // independently turn an uncertain event into a block.
-    if (matched.some((pattern) => pattern.name === '처음 보는 주소에서 관리자 명령 실행')
-        && matched.some((pattern) => pattern.name === '업무 시간 외 관리자 권한 사용')) {
-      confidence = Math.min(confidence, 0.84);
-    }
+    // establish a pattern without their explicit descriptions and matching ATT&CK tags.
   } else {
     const hasPrivilegeTechnique = techniques.some((technique) => ['T1068', 'T1078'].includes(technique));
     const unusualAddress = /처음\s*보는\s*주소|요청\s*주소는\s*처음/.test(description);

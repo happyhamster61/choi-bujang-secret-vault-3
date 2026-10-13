@@ -4,8 +4,8 @@
   "decisions": [
     {
       "alertId": "pv-01",
-      "action": "alert",
-      "confidence": 0.72,
+      "action": "block",
+      "confidence": 0.86,
       "reason": "관리자 그룹에 계정 추가: 설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다."
     },
     {
@@ -16,8 +16,8 @@
     },
     {
       "alertId": "pv-03",
-      "action": "alert",
-      "confidence": 0.79,
+      "action": "block",
+      "confidence": 0.86,
       "reason": "처음 보는 주소에서 관리자 명령 실행, 업무 시간 외 관리자 권한 사용: 이력·업무 시간 기준은 설명에만 있어 독립 확인되지 않았습니다."
     },
     {
@@ -160,8 +160,8 @@
     }
   ],
   "counts": {
-    "block": 4,
-    "alert": 8,
+    "block": 6,
+    "alert": 6,
     "record": 14
   }
 }
