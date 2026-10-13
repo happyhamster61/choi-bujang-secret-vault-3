@@ -64,9 +64,9 @@
     },
     {
       "alertId": "pv-11",
-      "action": "alert",
-      "confidence": 0.6,
-      "reason": "비관리자 그룹 멤버 변경: 그룹 멤버 변경은 있으나 관리자 권한 악용은 불분명함"
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "비관리자 그룹 멤버 변경: 관리자 권한 상승 신호 없이 일반 그룹만 변경됨"
     },
     {
       "alertId": "pv-12",
@@ -88,9 +88,9 @@
     },
     {
       "alertId": "pv-15",
-      "action": "alert",
-      "confidence": 0.6,
-      "reason": "비관리자 그룹 멤버 변경: 그룹 멤버 변경은 있으나 관리자 권한 악용은 불분명함"
+      "action": "record",
+      "confidence": 0.1,
+      "reason": "비관리자 그룹 멤버 변경: 관리자 권한 상승 신호 없이 일반 그룹만 변경됨"
     },
     {
       "alertId": "pv-16",
@@ -161,7 +161,7 @@
   ],
   "counts": {
     "block": 9,
-    "alert": 6,
-    "record": 11
+    "alert": 4,
+    "record": 13
   }
 }

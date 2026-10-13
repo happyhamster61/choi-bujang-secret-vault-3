@@ -81,6 +81,12 @@ export function decide(alert) {
 
   const nonAdminMembershipPattern = matched.find((pattern) => pattern.name === '비관리자 그룹 멤버 변경');
   if (nonAdminMembershipPattern) {
+    const explicitPrivilegeSignal = context.t1068 || context.adminCommand
+      || lower.includes('권한 상승') || lower.includes('관리자 권한');
+    if (!explicitPrivilegeSignal) {
+      return { action: 'record', confidence: 0.1,
+        reason: `${nonAdminMembershipPattern.name}: 관리자 권한 상승 신호 없이 일반 그룹만 변경됨` };
+    }
     const confidence = 0.6;
     return { action: actionFor(confidence), confidence,
       reason: `${nonAdminMembershipPattern.name}: 그룹 멤버 변경은 있으나 관리자 권한 악용은 불분명함` };
