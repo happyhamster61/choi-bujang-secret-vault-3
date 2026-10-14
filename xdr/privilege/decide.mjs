@@ -166,8 +166,35 @@ export function decide(alert) {
     supportingEvidence.push(failedCommand ? '명령 실패' : '후속 명령 미관측');
   }
 
-  // Partial evidence alone remains an alert and cannot cross the block threshold.
-  if (fullMatches.length === 0) confidence = Math.min(confidence, 0.84);
+  // Independent high-risk context can corroborate a partial pattern match.
+  // A privilege transition followed by an administrator command with both
+  // privilege-related ATT&CK tags is stronger than either partial match alone.
+  if (adminPrivilegeTransition && adminCommandExecuted
+    && context.hasTechnique('T1068') && context.hasTechnique('T1078')) {
+    confidence += 0.25;
+    supportingEvidence.push('관리자 권한 전환 직후 T1068·T1078 관리자 명령 실행');
+  }
+  if (adminCommandExecuted && otherAccountPrivilege
+    && context.hasTechnique('T1068') && level >= 10) {
+    confidence += 0.27;
+    supportingEvidence.push('높은 규칙 수준의 다른 계정 권한 관리자 명령');
+  }
+  if (adminPrivilegeTransition && unfamiliarAddress
+    && context.hasTechnique('T1068') && level >= 10) {
+    confidence += 0.27;
+    supportingEvidence.push('높은 규칙 수준의 낯선 주소 관리자 권한 세션 전환');
+  }
+
+  // Partial evidence without corroborating attack context remains an alert.
+  if (fullMatches.length === 0
+    && !(adminPrivilegeTransition && adminCommandExecuted
+      && context.hasTechnique('T1068') && context.hasTechnique('T1078'))
+    && !(adminCommandExecuted && otherAccountPrivilege
+      && context.hasTechnique('T1068') && level >= 10)
+    && !(adminPrivilegeTransition && unfamiliarAddress
+      && context.hasTechnique('T1068') && level >= 10)) {
+    confidence = Math.min(confidence, 0.84);
+  }
 
   const patternReason = matches.map(({ pattern, strength, evidence }) =>
     `${pattern.name} (${strength === 'full' ? '완전 일치' : '부분 일치'}): ${evidence}`,
