@@ -40,6 +40,12 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 로컬 정적 빌드는 `npm run build -- --local`로 확인합니다. 제출 자료 생성은 Git 작업 트리가 깨끗하고 저장 설정이 커밋된 상태에서 `npm run bundle`을 실행합니다. bundle은 실제 배포에 보낸 무로그인 요청의 관찰 결과만 자체 점검으로 기록하며, 실제 심판 판정으로 간주하지 않습니다.
 
+## 6단계 · 등록 기기 판정
+
+`src/decider.mjs`는 엔진이 확인해 전달한 `deviceRegistered`가 `true`일 때 요청을 `allow`하고, `false`이거나 값이 없으면 `deny`와 `device_not_registered`를 반환합니다. 등록 여부는 브라우저 입력이 아니라 반 엔진이 확인한 계약 값입니다. 요청·응답 필드는 [docs/DECIDER_REQUEST.md](docs/DECIDER_REQUEST.md)의 `aleph.decision.v1` 계약을 따릅니다.
+
+로컬 가상 요청 확인은 저장소 루트에서 `npm run decider:test`를 실행합니다. 출력에서 `등록 기기의 정상 요청`은 통과하고 `미등록 기기의 가상 요청`은 `deny` 및 `device_not_registered`여야 합니다. 별도 접속 프로그램 설치는 필요하지 않습니다. 이 연습은 로컬 가상 요청 결과이며 실제 심판 판정이나 미등록 기기의 운영 접속 시험이 아닙니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
