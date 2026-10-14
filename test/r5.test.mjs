@@ -61,3 +61,28 @@ test('5단계 자기 점검은 무로그인 notes API의 응답만 기록한다'
     globalThis.fetch = originalFetch;
   }
 });
+
+test('6단계 제출 자기 점검도 무로그인 notes API의 실제 관찰 형식을 사용한다', async () => {
+  const originalFetch = globalThis.fetch;
+  let requestUrl;
+  try {
+    globalThis.fetch = async (url, init) => {
+      requestUrl = String(url);
+      assert.equal(init.method, 'GET');
+      assert.equal(new Headers(init.headers).has('Authorization'), false);
+      return new Response(JSON.stringify({ error: 'LOGIN_REQUIRED' }), {
+        status: 401,
+        headers: { 'content-type': 'application/json' },
+      });
+    };
+    const [result] = await runAttackChecks({ ...config, step: 6 });
+    assert.equal(requestUrl, 'https://student-defense.vercel.app/api/notes');
+    assert.deepEqual(result, {
+      attackId: 'notes_list_without_login',
+      expected: 'HTTP 401 LOGIN_REQUIRED',
+      observed: 'HTTP 401 LOGIN_REQUIRED',
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
