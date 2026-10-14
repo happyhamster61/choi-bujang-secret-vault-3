@@ -26,9 +26,17 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 제작 2에서는 API가 토큰 검증으로 얻은 `userId`를 소유자 기준으로 사용합니다. 목록 조회는 본인 소유 메모만 반환하고, 메모 추가 시 `owner_id`를 검증된 `userId`로 저장합니다. 단건 `GET`, `PUT`, `DELETE`는 `note_uuid`와 검증된 `userId`를 함께 확인하며, 타인 소유 메모에는 `404`를 반환합니다. `PUT` 본문에서 `owner_id`를 지정하면 요청을 거부합니다.
 
-제작 3에서는 `public.training_notes`에 RLS를 활성화하고 `PUBLIC` 및 `anon` 권한을 회수했습니다. `authenticated`에는 `SELECT`, `INSERT`, `UPDATE`, `DELETE`만 부여했으며, 네 정책 모두 `auth.uid() = owner_id`를 적용합니다. `UPDATE`는 기존 행 `USING`과 새 행 `WITH CHECK`를 모두 확인합니다. `service_role` 권한은 변경하지 않았습니다.
+저장소의 `sql/production-1-training-notes.sql`은 `public.training_notes`에 RLS를 활성화하고 `anon`, `authenticated`의 테이블·시퀀스 권한을 회수합니다. `sql/production-3-notes-uuid.sql`은 API용 UUID 열과 인덱스를 추가합니다. 이 저장소에서 `authenticated`용 소유자 정책을 만드는 SQL이나 실제 Supabase 적용 내역은 확인되지 않으므로, DB의 현재 권한 상태는 별도로 확인해야 합니다.
 
-`aleph.config.json`은 현재 `step: 4`이며, 빌드와 배포 식별 정보 생성은 1~4단계를 허용합니다. `judgeIssuer`와 Production `publicAppUrl` 설정은 기존 값을 유지합니다.
+## 5단계 · 자료 요청을 서버 한곳으로 모으기
+
+브라우저의 메모 목록·추가 요청은 `/api/notes` Vercel 함수로, 단건 조회·수정·삭제 요청은 `/api/notes/:id` 함수로 보냅니다. 브라우저의 Supabase Auth 로그인·로그아웃은 유지합니다. 서버 함수는 Bearer 세션을 검증하고, 검증된 `userId`를 소유자 조건으로 사용합니다. 단건 조회·수정·삭제도 `note_uuid`와 `owner_id`를 함께 확인합니다. 서버 함수의 실제 DB 연결에는 Vercel의 `SUPABASE_URL`, `SUPABASE_SECRET_KEY` 환경변수가 필요합니다.
+
+`aleph.config.json`은 5단계를 가리킵니다. `originalApiUrl`은 쿼리 문자열이 없는 HTTPS 원본 자료 API 주소이며, `allowedRoutes`는 구현된 목록·추가·단건 조회·수정·삭제 경로와 일치합니다. `judgeIssuer`와 Production `publicAppUrl`은 기존 값을 유지합니다. SQL 파일의 존재만으로 Supabase 프로젝트에 실제 적용됐는지는 확인할 수 없습니다.
+
+`vercel.json`에는 현재 `/` 응답에 `X-Content-Type-Options: nosniff` 헤더가 설정되어 있습니다. API 경로 전체에 적용되는 별도 보안 헤더 설정은 없습니다.
+
+로컬 관련 검사는 `npm run test:r5`와 `npm run build -- --local`입니다. 제출 묶음은 저장 설정을 커밋한 뒤 깨끗한 Git 작업 트리에서 `npm run bundle`로 생성합니다. 자기 점검은 실제 배포 주소의 무로그인 `GET /api/notes` 요청을 보내 관찰 결과를 기록하며 심판 판정은 아닙니다. A/B 계정의 CRUD 확인은 별도의 실제 배포·Supabase 환경 점검입니다.
 
 로컬 정적 빌드는 `npm run build -- --local`로 확인합니다. 제출 자료 생성은 Git 작업 트리가 깨끗하고 저장 설정이 커밋된 상태에서 `npm run bundle`을 실행합니다. bundle은 실제 배포에 보낸 무로그인 요청의 관찰 결과만 자체 점검으로 기록하며, 실제 심판 판정으로 간주하지 않습니다.
 

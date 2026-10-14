@@ -1,8 +1,8 @@
 // Student self-check: make only a read-only request without a login token.
 // Record the observed HTTP result; do not report it as a judge decision.
 export async function runAttackChecks(config) {
-  if (![3, 4].includes(config.step)) {
-    throw new Error('3·4단계 제출 점검은 aleph.config.json의 step 3 또는 4가 필요합니다.');
+  if (![3, 4, 5].includes(config.step)) {
+    throw new Error('3~5단계 제출 점검은 aleph.config.json의 step 3, 4 또는 5가 필요합니다.');
   }
 
   let app;
