@@ -1,29 +1,58 @@
 const PATTERNS = Object.freeze([
-  {
+  Object.freeze({
     name: '관리자 그룹에 계정 추가',
-    mitre: ['T1078'],
-    matches: ({ alert, description, techniques }) =>
-      alert?.data?.group === 'administrators'
-      && techniques.includes('T1078')
-      && /관리자 그룹.{0,24}(?:추가|들어|재추가)|다시 관리자(?:로| 그룹에).{0,12}들어/.test(description),
-  },
-  {
-    name: '처음 보는 주소에서 관리자 명령 실행',
-    mitre: ['T1068'],
-    matches: ({ description, techniques }) =>
-      techniques.includes('T1068')
-      && /처음\s*보는\s*주소/.test(description)
-      && /관리자\s*명령.{0,24}실행/.test(description),
-  },
-  {
+    condition: "data.group이 'administrators'이고 rule.description에 계정이 관리자 그룹에 추가되거나 다시 추가됐다는 내용이 기록된 경우",
+    mitre: Object.freeze(['T1078']),
+    evidence: 'fixture는 data.group과 T1078 태그를 제공하고 설명에 관리자 그룹 추가·재추가를 기록하지만, 변경 승인 여부나 실제 권한 사용은 별도로 제공하지 않습니다.',
+    evaluate(context) {
+      if (context.adminGroupChange && context.hasTechnique('T1078')) {
+        return { strength: 'full', evidence: 'administrators 그룹 필드, T1078, 추가 설명이 일치' };
+      }
+      if (context.hasTechnique('T1078') && context.adminPrivilegeTransition && !context.explicitNonAdminGroup) {
+        return { strength: 'partial', evidence: '관리자 권한 취득 설명은 있지만 administrators 그룹 필드가 없음' };
+      }
+      return null;
+    },
+  }),
+  Object.freeze({
+    name: '처음 관찰되는 관리자 명령 실행',
+    condition: 'rule.description이 관리자 명령 자체가 처음 관찰되었거나 처음 실행되었다고 명시하고 rule.mitre에 T1068이 포함된 경우. 주소나 출발 IP가 처음이라는 내용만으로는 일치하지 않음',
+    mitre: Object.freeze(['T1068']),
+    evidence: 'fixture에는 data.srcip은 있지만 관리자 명령의 이름이나 과거 실행 이력은 없으므로, 설명이 명령 자체의 최초 관찰·실행을 명시할 때만 신호로 삼고 이력은 독립 검증할 수 없습니다.',
+    evaluate(context) {
+      if (context.hasTechnique('T1068') && context.firstObservedAdminCommand) {
+        return { strength: 'full', evidence: 'T1068과 관리자 명령 자체의 최초 관찰 설명이 일치' };
+      }
+      if (context.hasTechnique('T1068')
+        && (context.adminCommand || context.adminPrivilegeTransition || context.attemptedElevation)) {
+        const evidence = context.adminCommand
+          ? 'T1068과 관리자 명령 실행이 있으나 명령의 최초 관찰은 확인되지 않음'
+          : context.adminPrivilegeTransition
+            ? 'T1068과 관리자 세션 권한 변경 설명은 있으나 명령 실행은 없음'
+            : 'T1068과 권한 상승 시도는 있으나 관리자 명령 실행은 없음';
+        return { strength: 'partial', evidence };
+      }
+      return null;
+    },
+  }),
+  Object.freeze({
     name: '업무 시간 외 관리자 권한 사용',
-    mitre: ['T1068', 'T1078'],
-    matches: ({ description, techniques, timestampValid, adminGroupChange, adminCommand }) =>
-      techniques.some((technique) => ['T1068', 'T1078'].includes(technique))
-      && timestampValid
-      && /수업\s*시간\s*밖|업무처럼\s*보이지\s*않는\s*시각/.test(description)
-      && (adminGroupChange || adminCommand),
-  },
+    condition: 'rule.description에 수업 시간 밖 또는 업무처럼 보이지 않는 시각이라는 단서와 관리자 그룹 변경 또는 관리자 명령 실행이 함께 기록된 경우',
+    mitre: Object.freeze(['T1068', 'T1078']),
+    evidence: 'fixture에는 timestamp와 시간 외라는 설명이 있지만 공식 업무·수업 시간 정책은 없어 시간 외 여부는 설명의 주장으로만 확인됩니다.',
+    evaluate(context) {
+      const relevantTechnique = context.hasTechnique('T1068') || context.hasTechnique('T1078');
+      if (relevantTechnique && context.timestampValid && context.outsideHours
+        && (context.adminGroupChange || context.adminCommandExecuted)) {
+        return { strength: 'full', evidence: '유효한 시각, 시간 외 설명, 관리자 권한 행위가 함께 기록됨' };
+      }
+      if (relevantTechnique && context.timestampValid && context.outsideHours
+        && context.adminPrivilegeTransition) {
+        return { strength: 'partial', evidence: '시간 외 설명과 관리자 세션 변경은 있으나 그룹 변경·명령 실행이 없음' };
+      }
+      return null;
+    },
+  }),
 ]);
 
 const BLOCK_THRESHOLD = 0.85;
@@ -36,9 +65,7 @@ function oneLine(value) {
 function levelOf(alert) {
   const level = alert?.rule?.level;
   if (typeof level === 'number' && Number.isFinite(level)) return level;
-  if (typeof level === 'string' && level.trim() !== '' && Number.isFinite(Number(level))) {
-    return Number(level);
-  }
+  if (typeof level === 'string' && level.trim() !== '' && Number.isFinite(Number(level))) return Number(level);
   return null;
 }
 
@@ -51,89 +78,102 @@ function result(confidence, reason) {
 export function decide(alert) {
   const description = oneLine(alert?.rule?.description);
   const account = oneLine(alert?.data?.srcuser);
-  const timestampValid = typeof alert?.timestamp === 'string'
-    && Number.isFinite(Date.parse(alert.timestamp));
+  const timestampValid = typeof alert?.timestamp === 'string' && Number.isFinite(Date.parse(alert.timestamp));
+  const level = levelOf(alert);
   const techniques = Array.isArray(alert?.rule?.mitre)
     ? alert.rule.mitre.filter((technique) => typeof technique === 'string')
     : [];
-  const level = levelOf(alert);
   const group = oneLine(alert?.data?.group).toLowerCase();
   const adminGroupChange = group === 'administrators'
     && /관리자 그룹.{0,24}(?:추가|들어|재추가)|다시 관리자(?:로| 그룹에).{0,12}들어/.test(description);
+  const explicitNonAdminGroup = group !== '' && group !== 'administrators'
+    && /관리자 그룹은 아닙니다|관리자 그룹이 아닌/.test(description);
   const adminCommand = /관리자\s*명령.{0,24}(?:실행|실패)|권한\s*명령.{0,24}실행/.test(description)
     || (adminGroupChange && /명령\s*실행/.test(description));
-  const context = { alert, description, techniques, timestampValid, adminGroupChange, adminCommand };
-  const matched = PATTERNS.filter((pattern) => pattern.matches(context));
+  const adminCommandExecuted = /관리자\s*명령.{0,24}실행|권한\s*명령.{0,24}실행/.test(description)
+    || (adminGroupChange && /명령\s*실행/.test(description));
+  const adminPrivilegeTransition = /방금\s*관리자가\s*된|세션이\s*관리자\s*권한으로\s*바뀌/.test(description);
+  const firstObservedAdminCommand = /처음\s*(?:관찰|실행)(?:된|되는|한|됨|됐|되었습니다)\s*관리자\s*명령|관리자\s*명령(?:이|은|을)?\s*처음\s*(?:관찰|실행)(?:됐|되었|되는|됩니다|되었습니다|됨|했습니다|한)/.test(description);
+  const attemptedElevation = /권한\s*상승/.test(description);
+  const outsideHours = /수업\s*시간\s*밖|업무처럼\s*보이지\s*않는\s*시각/.test(description);
+  const context = {
+    adminGroupChange,
+    explicitNonAdminGroup,
+    adminCommand,
+    adminCommandExecuted,
+    adminPrivilegeTransition,
+    firstObservedAdminCommand,
+    attemptedElevation,
+    outsideHours,
+    timestampValid,
+    hasTechnique: (technique) => techniques.includes(technique),
+  };
 
   if (!description || level === null || !account || !timestampValid) {
-    return result(0, '시각, 계정, 설명 또는 규칙 수준이 없어 패턴 근거를 확인할 수 없습니다.');
+    return result(0, '필수 경보 필드가 없어 세 패턴을 평가할 수 없습니다.');
   }
 
-  const reasons = [];
-  let confidence = 0;
+  const matches = PATTERNS.map((pattern) => {
+    const match = pattern.evaluate(context);
+    return match ? { pattern, ...match } : null;
+  }).filter(Boolean);
 
-  if (matched.length > 0) {
-    const scores = matched.map((pattern) => {
-      reasons.push(pattern.name);
-      if (pattern.name === '관리자 그룹에 계정 추가') return 0.86;
-      if (pattern.name === '처음 보는 주소에서 관리자 명령 실행') return 0.76;
-      return 0.65;
-    });
-    confidence = Math.max(...scores);
-
-    // The exact admin-group pattern already requires the structured group, T1078,
-    // and an add/re-add description. Keep its corroborated scores stable.
-    const count = Number(alert?.data?.count);
-    const repeatedOrBulk = Number.isFinite(count) && count > 1
-      || /계정\s*\d+개|다시\s*관리자|1분\s*뒤에\s*다시/.test(description);
-    const matchedAdminGroupPattern = matched.some((pattern) => pattern.name === '관리자 그룹에 계정 추가');
-    if (matchedAdminGroupPattern) {
-      if (adminGroupChange && adminCommand) confidence = Math.max(confidence, 0.93);
-      else if (adminGroupChange && repeatedOrBulk) confidence = Math.max(confidence, 0.9);
-      else confidence = Math.max(confidence, 0.86);
-    } else {
-      // A second distinct source pattern is corroboration, not a full second score.
-      confidence += 0.07 * Math.max(0, matched.length - 1);
-      // Rule level only contributes after one or more defined patterns matched.
-      if (level >= 10) confidence += 0.03;
-    }
-
-    // The first-seen-address and out-of-hours claims are description-only and cannot
-    // establish a pattern without their explicit descriptions and matching ATT&CK tags.
-  } else {
-    const hasPrivilegeTechnique = techniques.some((technique) => ['T1068', 'T1078'].includes(technique));
-    const unusualAddress = /처음\s*보는\s*주소|요청\s*주소는\s*처음/.test(description);
-    const otherAccount = /다른\s*계정의\s*권한/.test(description);
-    const changedToAdmin = /세션이\s*관리자\s*권한으로\s*바뀌|방금\s*관리자가\s*된/.test(description);
-    const attemptedElevation = /권한\s*상승/.test(description);
-    const cancelled = /취소됐|취소\s*되었습니다/.test(description);
-    const failedCommand = /관리자\s*명령.{0,24}실패/.test(description);
-    const noFollowOnCommand = /권한\s*상승.{0,24}명령은\s*없|이어s*명령은\s*없/.test(description);
-    const routineAddress = /평소\s*주소/.test(description);
-
-    if (hasPrivilegeTechnique && adminCommand && (otherAccount || changedToAdmin || unusualAddress || failedCommand)) {
-      confidence = otherAccount ? 0.73 : changedToAdmin && unusualAddress ? 0.78 : 0.61;
-      reasons.push(otherAccount ? '다른 계정 권한으로 관리자 명령 실행' : '관리자 명령의 불완전한 의심 신호');
-    } else if (hasPrivilegeTechnique && changedToAdmin && unusualAddress) {
-      confidence = 0.76;
-      reasons.push('처음 보는 주소의 관리자 권한 세션 변경');
-    } else if (hasPrivilegeTechnique && attemptedElevation && (cancelled || noFollowOnCommand)) {
-      confidence = cancelled ? 0.58 : 0.62;
-      reasons.push(cancelled ? '취소된 권한 상승 시도' : '후속 관리자 명령이 없는 권한 상승 단서');
-    } else if (hasPrivilegeTechnique && adminCommand && routineAddress) {
-      confidence = 0.2;
-      reasons.push('평소 주소의 단발 관리자 명령이며 추가 이상 단서는 확인되지 않음');
-    }
+  if (matches.length === 0) {
+    return result(0.05, '세 패턴과 일치하거나 부분 일치하는 근거가 없어 정상 이벤트로 기록합니다.');
   }
 
-  if (reasons.length === 0) {
-    return result(0.05, '세 패턴과 일치하는 권한 상승 근거가 없어 일반 이벤트로 기록합니다.');
+  const fullMatches = matches.filter((match) => match.strength === 'full');
+  const partialMatches = matches.filter((match) => match.strength === 'partial');
+  const strongest = Math.max(...fullMatches.map(({ pattern }) => {
+    if (pattern.name === '관리자 그룹에 계정 추가') return 0.88;
+    if (pattern.name === '처음 관찰되는 관리자 명령 실행') return 0.78;
+    return 0.83;
+  }), ...partialMatches.map(() => 0.58));
+
+  let confidence = strongest;
+  const supportingEvidence = [];
+  confidence += Math.max(0, fullMatches.length - 1) * 0.04;
+  confidence += Math.max(0, partialMatches.length - (fullMatches.length ? 0 : 1)) * 0.04;
+  if (level >= 10) {
+    confidence += 0.02;
+    supportingEvidence.push(`rule.level ${level} 보조 신호`);
   }
 
-  const uncertainty = matched.some((pattern) =>
-    pattern.name === '처음 보는 주소에서 관리자 명령 실행'
-      || pattern.name === '업무 시간 외 관리자 권한 사용')
-    ? '이력·업무 시간 기준은 설명에만 있어 독립 확인되지 않았습니다.'
-    : '설명과 구조화된 그룹 필드에서 확인되는 신호를 사용했습니다.';
-  return result(confidence, `${reasons.join(', ')}: ${uncertainty}`);
+  const otherAccountPrivilege = /다른\s*계정의\s*권한/.test(description);
+  const unfamiliarAddress = /처음\s*보는\s*주소|요청\s*주소는\s*처음\s*봅니다/.test(description);
+  const routineAddress = /평소\s*주소/.test(description);
+  const cancelled = /취소됐|취소\s*되었습니다/.test(description);
+  const failedCommand = /관리자\s*명령.{0,24}실패/.test(description);
+  const noFollowOnCommand = /권한\s*상승.{0,24}명령은\s*없|이어서\s*명령은\s*없/.test(description);
+  if (otherAccountPrivilege) {
+    confidence += 0.03;
+    supportingEvidence.push('다른 계정의 권한 사용');
+  }
+  if (unfamiliarAddress) {
+    confidence += 0.02;
+    supportingEvidence.push('처음 관찰된 출발 주소');
+  }
+  if (routineAddress) {
+    confidence -= 0.05;
+    supportingEvidence.push('평소 주소라는 설명은 위험도 보정에 반영');
+  }
+  if (cancelled) {
+    confidence -= 0.04;
+    supportingEvidence.push('시도 취소');
+  }
+  if (failedCommand || noFollowOnCommand) {
+    confidence -= 0.03;
+    supportingEvidence.push(failedCommand ? '명령 실패' : '후속 명령 미관측');
+  }
+
+  // Partial evidence alone remains an alert and cannot cross the block threshold.
+  if (fullMatches.length === 0) confidence = Math.min(confidence, 0.84);
+
+  const patternReason = matches.map(({ pattern, strength, evidence }) =>
+    `${pattern.name} (${strength === 'full' ? '완전 일치' : '부분 일치'}): ${evidence}`,
+  ).join('; ');
+  const reason = supportingEvidence.length > 0
+    ? `${patternReason}; 보조 근거: ${supportingEvidence.join(', ')}`
+    : patternReason;
+  return result(confidence, reason);
 }
