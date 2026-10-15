@@ -138,7 +138,7 @@ test('N. 5분 창 안의 여러 읽기 사건 count 합이 8이면 step_up이다
   ] }), 'step_up');
 });
 
-test('O. source none 및 unknown 위치·네트워크 값은 가상 위치 증거를 만들지 않는다', () => {
+test('O. source none은 추가 관문이 아니며 명시된 세 이상 신호로만 step_up한다', () => {
   const request = input({ source: 'none', hour: 2, region: 'unknown', network: 'new',
     events: [{ kind: 'read', ageSeconds: 30, count: 10 }] });
   assert.deepEqual(inspectContextInput(request), {
@@ -146,7 +146,7 @@ test('O. source none 및 unknown 위치·네트워크 값은 가상 위치 증�
   });
   assert.equal(request.signals.region, 'unknown');
   assert.equal(request.signals.network, 'new');
-  assertDecision(request, 'allow');
+  assertDecision(request, 'step_up');
 });
 
 test('읽기 관련 kind 네 종류와 risk_signal만 행동 횟수에 포함한다', () => {
