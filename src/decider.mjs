@@ -16,7 +16,7 @@ const LOCAL_POLICY = Object.freeze({
 // explicit engine-provided *virtual* indicators; unknown values remain insufficient.
 const UNUSUAL_NETWORKS = new Set([
   'unusual', 'first_seen', 'first_time', 'first_seen_network', 'new',
-  'new_network', 'unfamiliar', 'unrecognized', 'untrusted',
+  'new_network', 'unknown_network', 'unfamiliar', 'unrecognized', 'untrusted',
 ]);
 const USUAL_NETWORKS = new Set(['usual', 'known', 'familiar', 'trusted']);
 const READ_EVENT_KINDS = new Set([
