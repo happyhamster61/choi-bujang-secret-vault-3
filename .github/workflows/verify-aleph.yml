@@ -23,19 +23,8 @@ jobs:
         run: npm test
       - name: Stage 7 baseline decisions
         run: npm run fixture:7
-      # The starter expects allow after reauthentication, but the public
-      # request contract does not bind verified to the same fresh login.
-      # Keep the original test unchanged; report its known failure, not success.
-      - name: Decider exercise (reauthentication contract not verified)
-        id: reauth_exercise
-        continue-on-error: true
+      - name: Decider exercise (all four cases)
         run: npm run decider:test
-      - name: Record reauthentication as unverified
-        if: steps.reauth_exercise.outcome == 'failure'
-        run: |
-          echo '::warning::Reauthentication-after-step-up is NOT VERIFIED: original virtual exercise expects allow, but the published engine contract lacks a request binding to a new login.'
-          echo '### Stage 7 limitation' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Reauthentication after step-up: **NOT VERIFIED** (original exercise failed; no authentication bypass added).' >> "$GITHUB_STEP_SUMMARY"
       - name: Local deployment build
         if: success() || failure()
         run: npm run build -- --local
