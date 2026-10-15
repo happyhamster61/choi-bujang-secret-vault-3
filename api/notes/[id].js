@@ -4,10 +4,17 @@ import { NotesAccessError, readJsonBody, requireNotesAccess, sendNotesError,
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 
 function noteIdFromRequest(request) {
-  const routeId = request.query?.id;
-  if (typeof routeId === 'string') return routeId;
-  const pathname = new URL(request.url, `https://${request.headers.host || 'localhost'}`).pathname;
-  return decodeURIComponent(pathname.slice(pathname.lastIndexOf('/') + 1));
+  const pathname = new URL(request.url, 'https://localhost').pathname;
+  if (!pathname.startsWith('/api/notes/') || pathname.includes('%')
+      || pathname.slice('/api/notes/'.length).includes('/')) {
+    throw new TypeError('INVALID_NOTE_ID');
+  }
+  const id = pathname.slice('/api/notes/'.length);
+  // A query parameter must never redirect an item request to another ID.
+  if (request.query?.id !== undefined && request.query.id !== id) {
+    throw new TypeError('INVALID_NOTE_ID');
+  }
+  return id;
 }
 
 export default async function handler(request, response) {
