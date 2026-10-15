@@ -36,7 +36,7 @@ begin
   insert into public.stage10_note_backups
     (note_uuid, owner_id, title, content, content_sha256, verified_at, baseline_commit)
     select note_uuid,owner_id,title,content,
-      encode(digest(content,'sha256'),'hex'),transaction_timestamp(),
+      encode(extensions.digest(content,'sha256'),'hex'),transaction_timestamp(),
       'cbdbbed3bb5f2c97bb5efeb82c0d9e7ef750c27c'
     from public.training_notes
     where owner_id in (
@@ -49,7 +49,7 @@ begin
         left join public.training_notes n on n.note_uuid=b.note_uuid
         where n.note_uuid is null or b.owner_id is distinct from n.owner_id
           or b.title is distinct from n.title
-          or b.content_sha256 is distinct from encode(digest(n.content,'sha256'),'hex')
+          or b.content_sha256 is distinct from encode(extensions.digest(n.content,'sha256'),'hex')
       ) then raise exception 'Stage10 baseline mismatch'; end if;
 end $$;
 
@@ -74,7 +74,7 @@ begin
     where note_uuid = p_note_uuid and owner_id = p_owner_id
     for share;
   if not found
-    or snapshot.content_sha256 <> encode(digest(snapshot.content, 'sha256'), 'hex')
+    or snapshot.content_sha256 <> encode(extensions.digest(snapshot.content, 'sha256'), 'hex')
     or snapshot.verified_at is null
     or snapshot.baseline_commit <> 'cbdbbed3bb5f2c97bb5efeb82c0d9e7ef750c27c' then
     raise exception 'verified_backup_not_found';
@@ -96,7 +96,7 @@ begin
       values (snapshot.note_uuid, snapshot.owner_id, snapshot.title, snapshot.content);
   end if;
 
-  select encode(digest(content, 'sha256'), 'hex') into resulting_hash
+  select encode(extensions.digest(content, 'sha256'), 'hex') into resulting_hash
     from public.training_notes
     where note_uuid = p_note_uuid and owner_id = p_owner_id;
   if resulting_hash is distinct from snapshot.content_sha256 then
