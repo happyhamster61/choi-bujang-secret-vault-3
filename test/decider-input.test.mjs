@@ -209,3 +209,26 @@ test('stepUp.verified만으로 복합 이상 요청을 allow로 바꾸지 않는
   const { suspicious } = fixtureRequests();
   assertDecision({ ...suspicious, stepUp: { verified: true, authAgeSeconds: 60 } }, 'step_up');
 });
+
+test('명시적 첫 접속·읽기 표현의 차이에도 복합 이상을 식별한다', () => {
+  const cases = [
+    { hour: 3, network: 'first-seen', kind: 'file-access', ageSeconds: 45, count: 12 },
+    { hour: 22, network: ' NEW NETWORK ', kind: 'note_read', ageSeconds: 120, count: 10 },
+    { hour: 5, network: 'unfamiliar', kind: 'mass_read', ageSeconds: 30, count: 9 },
+    { hour: 2, network: 'unrecognized', kind: 'bulk_file_read', ageSeconds: 90, count: 8 },
+  ];
+  for (const { hour, network, kind, ageSeconds, count } of cases) {
+    assertDecision(input({ hour, network,
+      events: [{ kind, ageSeconds, count }] }), 'step_up');
+  }
+});
+
+test('불명확한 문자열과 읽기 아닌 사건은 이상 근거가 되지 않는다', () => {
+  const events = [{ kind: 'read', ageSeconds: 30, count: 20 }];
+  assertDecision(input({ hour: 3, network: 'unlisted_indicator', events }), 'allow');
+  assertDecision(input({ hour: 3, network: 'unfamiliar',
+    events: [{ kind: 'download', ageSeconds: 30, count: 20 }] }), 'allow');
+  assertDecision(input({ hour: 3, network: 'unfamiliar',
+    events: [{ kind: 'login', ageSeconds: 30, count: 20 }] }), 'allow');
+  assertDecision(input({ hour: 3, network: 'unknown', events }), 'allow');
+});
