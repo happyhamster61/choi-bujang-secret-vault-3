@@ -20,5 +20,8 @@
   ],
   "stage11Api": [
     "api/device.js"
+  ],
+  "stage12Api": [
+    "api/operations.js"
   ]
 }
