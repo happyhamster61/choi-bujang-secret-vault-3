@@ -5,6 +5,17 @@ export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required'])
 const SIGNAL_FIELDS = ['source', 'region', 'network', 'hour'];
 const EVENT_FIELDS = ['kind', 'ageSeconds', 'count'];
 
+// Explicit local stage-7 policy; the decision contract defines no baseline or thresholds.
+const LOCAL_POLICY = Object.freeze({
+  unusualHourStart: 21,
+  unusualHourEnd: 7,
+  recentEventWindowSeconds: 300,
+  minimumReadCount: 8,
+});
+const UNUSUAL_NETWORKS = new Set(['unusual', 'first_seen', 'new', 'unknown_network']);
+const USUAL_NETWORKS = new Set(['usual', 'known', 'familiar', 'trusted']);
+const READ_EVENT_KINDS = new Set(['read', 'bulk_read', 'file_read', 'notes_read', 'risk_signal']);
+
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -39,22 +50,57 @@ export function inspectContextInput(request) {
   };
 }
 
-function isFixtureCompositeAnomaly(request, context) {
-  // Match only the fixture's exact virtual values; the contract defines no live baseline or thresholds.
-  return context.sourceClass === 'fixture'
-    && context.signalsShapeValid
+function hasAtypicalHour(signals) {
+  const { hour } = signals;
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) return false;
+  return hour >= LOCAL_POLICY.unusualHourStart || hour <= LOCAL_POLICY.unusualHourEnd;
+}
+
+function classifyNetwork(network) {
+  if (typeof network !== 'string' || network.length === 0 || network === 'unknown') {
+    return 'insufficient';
+  }
+  if (UNUSUAL_NETWORKS.has(network)) return 'unusual';
+  if (USUAL_NETWORKS.has(network)) return 'usual';
+  return 'insufficient';
+}
+
+function hasUnfamiliarNetwork(signals) {
+  return classifyNetwork(signals.network) === 'unusual';
+}
+
+function hasRecentHighVolumeEvent(events) {
+  let readCount = 0;
+  for (const event of events) {
+    if (!READ_EVENT_KINDS.has(event.kind)
+        || !Number.isFinite(event.ageSeconds)
+        || event.ageSeconds < 0
+        || event.ageSeconds > LOCAL_POLICY.recentEventWindowSeconds
+        || !Number.isInteger(event.count)
+        || event.count < 0) {
+      continue;
+    }
+    readCount += event.count;
+    if (readCount >= LOCAL_POLICY.minimumReadCount) return true;
+  }
+  return false;
+}
+
+function hasCompositeAnomaly(request, context) {
+  // `none` means the actual request path has no verified context; fixture-like values are not evidence.
+  // Unknown source alone contributes no signal. Missing values are never synthesized.
+  return context.signalsShapeValid
     && context.recentEventsShapeValid
-    && request.signals.hour === 3
-    && request.signals.network === 'unusual'
-    && request.recentEvents.some(event => event.kind === 'risk_signal'
-      && event.ageSeconds === 60
-      && event.count === 20);
+    && context.sourceClass !== 'none'
+    && hasAtypicalHour(request.signals)
+    && hasUnfamiliarNetwork(request.signals)
+    && hasRecentHighVolumeEvent(request.recentEvents);
 }
 
 export function decide(request) {
   const context = inspectContextInput(request);
   const registered = request?.deviceRegistered === true;
-  const stepUpRequired = registered && isFixtureCompositeAnomaly(request, context);
+  const stepUpRequired = registered && hasCompositeAnomaly(request, context);
   return {
     schema: 'aleph.decision.v1',
     requestId: request.requestId,
