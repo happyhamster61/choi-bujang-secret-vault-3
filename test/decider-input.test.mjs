@@ -205,9 +205,18 @@ test('미확인 출처의 복합 입력도 출처 자체가 아니라 세 신호
   assertDecision(request, 'step_up');
 });
 
-test('stepUp.verified만으로 복합 이상 요청을 allow로 바꾸지 않는다', () => {
+test('복합 이상 재확인은 엔진 verified와 5분 이내의 경과 시간 모두 필요하다', () => {
   const { suspicious } = fixtureRequests();
-  assertDecision({ ...suspicious, stepUp: { verified: true, authAgeSeconds: 60 } }, 'step_up');
+  for (const age of [0, 60, 300]) {
+    assertDecision({ ...suspicious, stepUp: { verified: true, authAgeSeconds: age } }, 'allow');
+  }
+  for (const age of [-1, 301, 900, null, 1.5, '60']) {
+    assertDecision({ ...suspicious, stepUp: { verified: true, authAgeSeconds: age } }, 'step_up');
+  }
+  assertDecision({ ...suspicious, stepUp: { verified: false, authAgeSeconds: 60 } }, 'step_up');
+  assertDecision({ ...suspicious, stepUp: { verified: 'true', authAgeSeconds: 60 } }, 'step_up');
+  assertDecision({ ...suspicious, deviceRegistered: false,
+    stepUp: { verified: true, authAgeSeconds: 60 } }, 'deny');
 });
 
 test('명시적 첫 접속·읽기 표현의 차이에도 복합 이상을 식별한다', () => {
