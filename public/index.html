@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BYTE BACK | 점령된 자료실</title>
+  <title>BYTE BACK | 안전 자료실</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#101a28">
   <style>
     :root { color-scheme: dark; font-family: system-ui, sans-serif; }
     body { margin: 0; min-height: 100vh; background: #101a28; color: #ecf4ff; }
@@ -25,6 +28,9 @@
     button { width: fit-content; color: #101a28; background: #8ad8df; cursor: pointer; font-weight: 700; }
     button:disabled { cursor: wait; opacity: .65; }
     #auth-status { min-height: 1.7em; }
+    [hidden] { display: none !important; }
+    #device-section { border: 1px solid #51667c; border-radius: 14px; background: #1a2a3d; padding: 18px; margin: 20px 0; }
+    #device-section button { margin-right: 10px; margin-bottom: 10px; }
     .note-actions { display: flex; gap: 8px; margin-top: 12px; }
     .note-actions button, #cancel-edit { padding: 7px 10px; }
   </style>
@@ -44,20 +50,33 @@
       </form>
       <button id="logout-button" type="button" hidden>로그아웃</button>
     </section>
+    <section id="device-section" hidden aria-label="기기 승인">
+      <h2>기기 승인 상태</h2>
+      <p id="device-status" role="status" aria-live="polite">기기 승인을 요청해 주세요.</p>
+      <button id="device-request" type="button">기기 승인 요청</button>
+      <button id="device-check" type="button" hidden>승인 상태 확인</button>
+      <p>앱 설치·요청 버튼만으로 기기가 승인되지 않습니다. 승인 여부는 서버가 결정합니다. 기기 개인키는 현재 화면의 메모리에만 존재합니다.</p>
+    </section>
+    <section aria-label="앱 설치와 네트워크">
+      <button id="install-app" type="button" hidden>앱 설치</button>
+      <p id="offline-status" role="status">오프라인에서는 보호 메모를 표시하지 않습니다.</p>
+    </section>
     <form id="note-form" hidden>
       <label>제목<input name="title" maxlength="200" required></label>
       <label>내용<textarea name="body" rows="4" required></textarea></label>
       <div><button id="save-note" type="submit">메모 추가</button> <button id="cancel-edit" type="button" hidden>수정 취소</button></div>
     </form>
     <p id="notes-status" role="status" aria-live="polite"></p>
-    <div class="notice">메모는 서버 API를 통해 불러옵니다.</div>
+    <div class="notice">기기 승인 후 서명된 요청으로만 보호 메모를 불러옵니다. 설치 표시만으로 기기를 신뢰하지 않습니다.</div>
     <ul id="notes" aria-live="polite"><li>로그인 후 메모를 볼 수 있습니다.</li></ul>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <script type="module">
+    import { createDeviceGate } from '/device-client.js';
     const supabase = window.supabase.createClient(
       'https://ucjdqkdfcwqiaiisgqkr.supabase.co',
-      'sb_publishable_mJdmH_B-ngOWtTZEA1uLBA_uP5ouuQg'
+      'sb_publishable_mJdmH_B-ngOWtTZEA1uLBA_uP5ouuQg',
+      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
     );
     const authStatus = document.querySelector('#auth-status');
     const loginForm = document.querySelector('#login-form');
@@ -71,6 +90,10 @@
     let notesRequestId = 0;
     let activeSession = null;
     let editingId = null;
+    const deviceGate = createDeviceGate({
+      getSession: () => activeSession,
+      onChange: () => loadNotes(activeSession)
+    });
 
     function resetNoteForm() {
       editingId = null;
@@ -106,9 +129,8 @@
         deleteButton.addEventListener('click', async () => {
           deleteButton.disabled = true;
           try {
-            const response = await fetch(`/api/notes/${encodeURIComponent(note.id)}`, {
-              method: 'DELETE',
-              headers: { Authorization: `Bearer ${activeSession.access_token}` }
+            const response = await deviceGate.signedFetch(`/api/notes/${encodeURIComponent(note.id)}`, {
+              method: 'DELETE'
             });
             if (!response.ok) throw new Error('메모를 삭제하지 못했습니다.');
             if (editingId === note.id) resetNoteForm();
@@ -130,11 +152,12 @@
     async function loadNotes(session) {
       const requestId = ++notesRequestId;
       activeSession = session?.access_token ? session : null;
-      if (!session?.access_token) {
+      if (!session?.access_token || !deviceGate.isApproved()) {
         noteForm.hidden = true;
         resetNoteForm();
         const item = document.createElement('li');
-        item.textContent = '로그인 후 메모를 볼 수 있습니다.';
+        item.textContent = !session?.access_token ? '로그인 후 메모를 볼 수 있습니다.' :
+          '서버가 기기를 승인하기 전에는 메모를 표시하지 않습니다.';
         list.replaceChildren(item);
         return;
       }
@@ -145,10 +168,7 @@
         textContent: '메모를 불러오는 중입니다.'
       }));
       try {
-        const response = await fetch('/api/notes', {
-          cache: 'no-store',
-          headers: { Authorization: `Bearer ${session.access_token}` }
-        });
+        const response = await deviceGate.signedFetch('/api/notes', { cache: 'no-store' });
         if (!response.ok) throw new Error(response.status === 401
           ? '로그인이 필요합니다.' : '메모를 불러올 수 없습니다.');
         const notes = await response.json();
@@ -166,6 +186,7 @@
 
     function showSession(session) {
       activeSession = session?.access_token ? session : null;
+      deviceGate.setSession(session);
       const signedIn = Boolean(session?.user);
       authStatus.textContent = signedIn ? '로그인 상태입니다.' : '로그아웃 상태입니다.';
       loginForm.hidden = signedIn;
@@ -186,10 +207,9 @@
       noteSaveButton.disabled = true;
       const editing = editingId !== null;
       try {
-        const response = await fetch(editing ? `/api/notes/${encodeURIComponent(editingId)}` : '/api/notes', {
+        const response = await deviceGate.signedFetch(editing ? `/api/notes/${encodeURIComponent(editingId)}` : '/api/notes', {
           method: editing ? 'PUT' : 'POST',
           headers: {
-            Authorization: `Bearer ${activeSession.access_token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
