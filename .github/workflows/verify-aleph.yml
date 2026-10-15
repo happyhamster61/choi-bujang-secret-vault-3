@@ -31,7 +31,7 @@ jobs:
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 8: verified engine service, method, route and exact per-resource path scope each decision. Only individual notes (GET, PUT, DELETE) and read-only class announcements are allowed; note lists, announcement writes, instructor materials and unknown routes are denied. Note API verifies owner_id. Class API verifies stored class membership and manager edits require stored instructor role. Supabase production-8 SQL and membership provisioning are NOT EXECUTED and actual cross-zone requests are NOT VERIFIED; do not interpret fixture and bundle self-check as deployment security validation."}' > bundle-notes.json
+          echo '{"explanation":"Stage 8: verified engine service, method, route and exact per-resource path scope each decision. Only individual notes (GET, PUT, DELETE) and read-only class announcements are allowed; note lists, announcement writes, instructor materials and unknown routes are denied. Note API verifies owner_id. Class API verifies stored class membership and manager edits require stored instructor role. Supabase stage8_resource_zones migration is APPLIED to the linked production project with RLS and no direct anon/authenticated grants, preserving the existing six notes. Class membership and zone sample records remain empty by design; no instructor role is fabricated. Actual authenticated cross-account and instructor authorization requests are NOT EXECUTED, and virtual tests do not establish live access protection."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
