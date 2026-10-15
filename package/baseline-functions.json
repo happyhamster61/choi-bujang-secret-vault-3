@@ -8,7 +8,9 @@
   ],
   "allowedNew": [
     "api/ai.js",
-    "api/threat-intel.js",
+    "api/threat-intel.js"
+  ],
+  "stage8Api": [
     "api/class-announcements/[id].js",
     "api/admin/class-announcements/[id].js",
     "api/instructor-materials/[id].js"
