@@ -88,6 +88,8 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 **1~9단계 재시험 순서:** (1) 백업 `baseline_commit`·해시와 정책 미리보기를 검증하고 복원 대상 한 건만 확인 (2) B의 변조·삭제 및 POST 복구 후 ID·소유자·SHA-256 비교 (3) 로그인 전 `GET /api/notes` 접근 401 확인 (4) A 정상 단건 GET/PUT/DELETE 및 B의 A 메모 요청 404 확인 (5) 로그인·기기 등록/미등록·추가 인증 300초/301초 분기 확인 (6) 메모 목록 차단·반 공지 쓰기 거부·강사 자료 차단 및 서버 소유자 검사 (7) 10분 안 120/121회 탐지 observe/propose_revocation 확인 (8) 기타 기존 API·XDR 회귀 실행 및 감사 이력 보존 비교. `npm ci`, `npm test`, `npm run decider:test`, `npm run detect:test`, `npm run policy:preview`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`로 코드/가상 연습과 제출 자료를 검사합니다. **실제 A/B 브라우저 로그인 및 심판 침공 후 1~9단계 HTTP 재전송은 아직 미실행이며, 테스트 결과를 만들어 기록하지 않습니다.**
 
+**10단계 저장점:** 검증된 9단계 정책 사본과 B의 비공개 단건 백업, 시험 정책 복원 미리보기 및 확인 후 복원, B 전용 POST 복구 API, 1~9단계 재시험 순서를 갖췄습니다. 공식 침공이 발생한 뒤 실제 HTTP 복구와 전체 재시험은 심판 제출 전에 실행했다고 주장하지 않습니다. 제출용 `bundle-notes.json`과 `artifacts/submission.json`은 생성 산출물로 Git 커밋 대상이 아닙니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
