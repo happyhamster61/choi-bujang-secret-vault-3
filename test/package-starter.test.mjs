@@ -27,9 +27,10 @@ test('패키징 함수 기준표는 시작 틀의 실제 API와 일치한다', a
   assert.deepEqual(baseline.stage8Api,
     ['api/class-announcements/[id].js', 'api/admin/class-announcements/[id].js',
       'api/instructor-materials/[id].js']);
+  assert.deepEqual(baseline.stage10Api, ['api/restore.js']);
   assert.deepEqual(actual,
     [...baseline.functions, ...baseline.preserved, ...baseline.allowedNew,
-      ...baseline.stage8Api].sort());
+      ...baseline.stage8Api, ...baseline.stage10Api].sort());
 });
 
 test('미구현 서버 뼈대는 성공이나 로그인 통과로 가장하지 않는다', async () => {
