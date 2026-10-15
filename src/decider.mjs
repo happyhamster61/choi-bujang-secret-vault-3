@@ -1,6 +1,6 @@
 // ALEPH SDP 엔진이 확인한 요청만 받습니다. 등록 상태는 엔진이 확인한 계약 필드입니다.
 // 요청 본문의 userId, role, 기기 키, 토큰을 별도로 믿거나 저장하지 마세요.
-export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required']);
+export const RULE_IDS = Object.freeze(['device_registered', 'step_up_required', 'resource_zone_allowed', 'resource_zone_denied']);
 
 const SIGNAL_FIELDS = ['source', 'region', 'network', 'hour'];
 const EVENT_FIELDS = ['kind', 'ageSeconds', 'count'];
@@ -122,17 +122,72 @@ function hasFreshVerifiedStepUp(request) {
     && stepUp.authAgeSeconds <= 300;
 }
 
+// Stage 8: only verified engine service, method, route and exact path are used.
+// Query parameters and claims supplied by browsers never select a zone.
+const RESERVED_NOTE_SEGMENTS = new Set(['export', 'import', 'search', 'all', 'bulk']);
+const NOTE_ROUTES = new Set(['/notes/:id', '/api/notes/:id']);
+const CLASS_ROUTES = new Set(['/class-announcements/:id', '/api/class-announcements/:id',
+  '/announcements/:id', '/api/announcements/:id']);
+const INSTRUCTOR_ROUTES = new Set(['/instructor-materials/:id', '/api/instructor-materials/:id']);
+const NOTE_SERVICES = new Set(['notes', 'note']);
+const CLASS_SERVICES = new Set(['class_announcements', 'class-announcements',
+  'announcements', 'class_notice']);
+const INSTRUCTOR_SERVICES = new Set(['instructor_materials', 'instructor-materials',
+  'instructor']);
+
+function matchesItemPath(route, path, prefixes, reserved = new Set()) {
+  if (typeof path !== 'string' || typeof route !== 'string'
+      || path.includes('?') || path.includes('#') || path.includes('%')
+      || path.includes('\\') || path.includes('//')) return false;
+  for (const prefix of prefixes) {
+    if (route !== prefix + '/:id' || !path.startsWith(prefix + '/')) continue;
+    const id = path.slice(prefix.length + 1);
+    // Accept virtual non-UUID IDs; prohibit route-depth function collisions.
+    if (id.length > 0 && id.length <= 256 && !id.includes('/')
+        && id !== '.' && id !== '..' && !reserved.has(id.toLowerCase())) return true;
+  }
+  return false;
+}
+
+function permittedResourceZone(request) {
+  const method = request?.method;
+  const service = request?.service;
+  const routeText = request?.route;
+  const path = request?.path;
+  if (typeof routeText !== 'string' || typeof method !== 'string'
+      || !routeText.startsWith(method + ' ')) return false;
+  const route = routeText.slice(method.length + 1);
+  if (NOTE_SERVICES.has(service) && ['GET', 'PUT', 'DELETE'].includes(method)
+      && NOTE_ROUTES.has(route)) {
+    return matchesItemPath(route, path, ['/notes', '/api/notes'], RESERVED_NOTE_SEGMENTS);
+  }
+  if (CLASS_SERVICES.has(service) && method === 'GET'
+      && CLASS_ROUTES.has(route)) {
+    return matchesItemPath(route, path,
+      ['/class-announcements', '/api/class-announcements',
+        '/announcements', '/api/announcements']);
+  }
+  // Instructor materials are never available through the student policy.
+  return false;
+}
+
 export function decide(request) {
   const context = inspectContextInput(request);
   const registered = request?.deviceRegistered === true;
-  const stepUpRequired = registered && hasCompositeAnomaly(request, context)
+  const zoneAllowed = permittedResourceZone(request);
+  const stepUpRequired = registered && zoneAllowed && hasCompositeAnomaly(request, context)
     && !hasFreshVerifiedStepUp(request);
   return {
     schema: 'aleph.decision.v1',
     requestId: request.requestId,
-    decision: !registered ? 'deny' : stepUpRequired ? 'step_up' : 'allow',
+    decision: !registered ? 'deny' : !zoneAllowed ? 'deny'
+      : stepUpRequired ? 'step_up' : 'allow',
     reasonCode: !registered ? 'device_not_registered'
+      : !zoneAllowed ? 'access_denied'
       : stepUpRequired ? 'step_up_required' : 'approved',
-    ruleIds: stepUpRequired ? [RULE_IDS[0], RULE_IDS[1]] : [RULE_IDS[0]],
+    ruleIds: !registered ? [RULE_IDS[0]]
+      : !zoneAllowed ? [RULE_IDS[0], RULE_IDS[3]]
+        : stepUpRequired ? [RULE_IDS[0], RULE_IDS[2], RULE_IDS[1]]
+          : [RULE_IDS[0], RULE_IDS[2]],
   };
 }
