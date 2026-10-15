@@ -1,0 +1,16 @@
+{
+  "version": 9,
+  "allowedRoutes": [
+    "GET /api/notes",
+    "PUT /api/class-announcements/:id"
+  ],
+  "policyRules": [
+    "device_registered"
+  ],
+  "unrelatedService": {
+    "keep": true
+  },
+  "auditHistory": [
+    "immutable_virtual_record"
+  ]
+}
