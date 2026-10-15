@@ -1,0 +1,16 @@
+{
+  "version": 9,
+  "sourceCommit": "cbdbbed3bb5f2c97bb5efeb82c0d9e7ef750c27c",
+  "allowedRoutes": [
+    "GET /api/notes/:id",
+    "PUT /api/notes/:id",
+    "DELETE /api/notes/:id",
+    "GET /api/class-announcements/:id"
+  ],
+  "policyRules": [
+    "device_registered",
+    "step_up_required",
+    "resource_zone_allowed",
+    "resource_zone_denied"
+  ]
+}
