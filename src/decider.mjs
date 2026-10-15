@@ -87,11 +87,11 @@ function hasRecentHighVolumeEvent(events) {
 }
 
 function hasCompositeAnomaly(request, context) {
-  // `none` means the actual request path has no verified context; fixture-like values are not evidence.
-  // Unknown source alone contributes no signal. Missing values are never synthesized.
+  // Treat source as provenance metadata, not a fourth anomaly requirement.
+  // Incomplete hour/network/events still cannot establish the three-factor anomaly.
+  // No browser headers or region-only hints are promoted into signals.
   return context.signalsShapeValid
     && context.recentEventsShapeValid
-    && context.sourceClass !== 'none'
     && hasAtypicalHour(request.signals)
     && hasUnfamiliarNetwork(request.signals)
     && hasRecentHighVolumeEvent(request.recentEvents);
