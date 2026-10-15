@@ -70,6 +70,15 @@
     <div class="notice">기기 승인 후 서명된 요청으로만 보호 메모를 불러옵니다. 설치 표시만으로 기기를 신뢰하지 않습니다.</div>
     <ul id="notes" aria-live="polite"><li>로그인 후 메모를 볼 수 있습니다.</li></ul>
   </main>
+  <script>
+    if ('serviceWorker' in navigator) {
+      addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+          // Installation is optional; never relax approval if offline support fails.
+        });
+      });
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <script type="module">
     import { createDeviceGate } from '/device-client.js';
