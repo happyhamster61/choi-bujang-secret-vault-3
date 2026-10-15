@@ -1,4 +1,4 @@
-name: ALEPH stage 8 verification
+name: ALEPH stage 9 verification
 
 on:
   push:
@@ -25,23 +25,25 @@ jobs:
         run: npm run fixture:7
       - name: Decider exercise (all four cases)
         run: npm run decider:test
+      - name: Stage 9 detection (six contract cases)
+        run: npm run detect:test
       - name: Local deployment build
         if: success() || failure()
         run: npm run build -- --local
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 8: verified engine service, method, route and exact per-resource path scope each decision. Only individual notes (GET, PUT, DELETE) and read-only class announcements are allowed; note lists, announcement writes, instructor materials and unknown routes are denied. Note API verifies owner_id. Class API verifies stored class membership and manager edits require stored instructor role. Supabase stage8_resource_zones migration is APPLIED to the linked production project with RLS and no direct anon/authenticated grants, preserving the existing six notes. Class membership and zone sample records remain empty by design; no instructor role is fabricated. Actual authenticated cross-account and instructor authorization requests are NOT EXECUTED, and virtual tests do not establish live access protection."}' > bundle-notes.json
+          echo '{"explanation":"Stage 9: detect(events) reads only at, method and identity.sub from engine-verified virtual events. The single burst_read rule proposes revocation only when the same pseudonymous subject performs more than 120 GET requests in any inclusive 10-minute time window. Exactly 120, slower events, other methods and mixed identities are observed. No device or session is actually revoked, and no token, full name, note content, network, region or device identifier is logged. Production engine event ingestion and revocation execution are NOT connected or verified. Stage 8 data-scoped API and stage 7 step-up policies remain unchanged. The submission self-check is an unauthenticated notes API probe, not evidence of operational revocation."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
       - name: Check submission bundle identity
         if: success() || failure()
         run: |
-          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==8||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
+          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==9||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: aleph-stage-8-submission
+          name: aleph-stage-9-submission
           path: artifacts/submission.json
           if-no-files-found: error
