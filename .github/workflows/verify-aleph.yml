@@ -29,7 +29,7 @@ jobs:
         run: npm run build -- --local
       - name: Prepare non-secret bundle notes
         run: |
-          printf '%s\\n' '{"explanation":"Stage 7 composite anomaly detection uses engine provided hour, network and recent read event signals. Missing and unrecognized values are not promoted to anomalies. Normal registered devices are allowed and unregistered devices are denied."}' > bundle-notes.json
+          echo '{"explanation":"Stage 7 composite anomaly detection uses engine provided hour, network and recent read event signals. Missing and unrecognized values are not promoted to anomalies. Normal registered devices are allowed and unregistered devices are denied."}' > bundle-notes.json
       - name: Create submission bundle
         run: npm run bundle
       - name: Check submission bundle identity
