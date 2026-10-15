@@ -1,4 +1,4 @@
-name: ALEPH stage 11 verification
+name: ALEPH stage 12 verification
 
 on:
   push:
@@ -31,23 +31,25 @@ jobs:
         run: npm run policy:preview
       - name: Stage 11 device signature and API gates
         run: node --test test/stage11-device.test.mjs
+      - name: Stage 12 operations dashboard and 41 pending cases
+        run: node --test test/stage12-operations.test.mjs
       - name: Local deployment build
         if: success() || failure()
         run: npm run build -- --local
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 11: existing notes PWA has a manifest, 192/512 SVG/PNG icons, app name and offline notice. The service worker caches only a static offline notice and never protected data or credentials. Supabase browser persistSession=false; nonextractable P-256 private device keys remain in JS memory, not browser storage. A verified login may request a device enrollment which starts pending, not automatically approved. A trusted database administrator must independently confirm the pending device. The device status page checks signed key possession. Protected notes and class announcement endpoints require the same authenticated owner, server-recorded approval, ECDSA signature bound to method, path, body SHA-256, timestamp and unique replay nonce, with fail-closed 403 for absent/tampered/replayed proof. Stage 1-10 decider/detect/restore behavior stays intact; actual administrator approval and browser end-to-end success have NOT been measured. Transient keys require a new enrollment after page restart."}' > bundle-notes.json
+          echo '{"explanation":"Stage 12: an authenticated, device-signed operation dashboard displays rule count from source, configured burst detection rule, actual per-owner database counts for device approval/revocation and restore audit, and recorded backup baseline version. Operational ALEPH engine decisions, detections and execution of identity revocation are NOT connected or claimed. The dashboard sends a real unauthenticated GET /api/notes probe and records its HTTP result, opaque request ID and UTC timestamp; official 41 challenges are individually marked NOT RUN with no invented results. Protected notes never appear in operations reporting. README documents 1-11 expected/observed test plan plus installation, execution, stop, recovery, and credits the ALEPH SDP engine as the provided component. Existing decider, detector, stage10 recovery and stage11 signed device gates remain intact. Official full 41-case attack verdict is pending judge submission."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
       - name: Check submission bundle identity
         if: success() || failure()
         run: |
-          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==11||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
+          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==12||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: aleph-stage-11-submission
+          name: aleph-stage-12-submission
           path: artifacts/submission.json
           if-no-files-found: error
