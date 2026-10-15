@@ -14,5 +14,8 @@
     "api/class-announcements/[id].js",
     "api/admin/class-announcements/[id].js",
     "api/instructor-materials/[id].js"
+  ],
+  "stage10Api": [
+    "api/restore.js"
   ]
 }
