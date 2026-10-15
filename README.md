@@ -90,6 +90,20 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 **10단계 저장점:** 검증된 9단계 정책 사본과 B의 비공개 단건 백업, 시험 정책 복원 미리보기 및 확인 후 복원, B 전용 POST 복구 API, 1~9단계 재시험 순서를 갖췄습니다. 공식 침공이 발생한 뒤 실제 HTTP 복구와 전체 재시험은 심판 제출 전에 실행했다고 주장하지 않습니다. 제출용 `bundle-notes.json`과 `artifacts/submission.json`은 생성 산출물로 Git 커밋 대상이 아닙니다.
 
+## 11단계 · 나만의 접속 앱을 완성합니다
+
+**설치형 웹앱:** 기존 자료실 `/`에 `public/manifest.webmanifest`, 192×192·512×512 PNG 및 SVG 아이콘을 연결했습니다. 앱 이름은 **BYTE BACK 안전 자료실**입니다. 별도 실행 파일은 설치하지 않습니다. `public/sw.js`는 정적 `/offline.html` 안내 한 페이지만 캐시하고, 보호 API·메모·기기키·세션을 캐시하지 않습니다. 오프라인에서는 자료를 표시하지 않습니다. 브라우저가 앱을 설치했다고 해서 기기 승인이나 로그인 검증을 건너뛰지 않습니다.
+
+**승인 요청과 상태:** 로그인 후 `public/index.html`에 기기 승인 요청·상태 확인 버튼이 표시됩니다. `POST /api/device`는 확인된 로그인 사용자의 요청으로 서버 DB `stage11_devices`에 소유자와 P-256 공개키만 기록하며 항상 `pending`으로 시작합니다. **버튼으로 자신을 승인하는 기능은 없습니다.** 서버 관리자가 기기·사용자 요청을 별도로 확인한 뒤 운영 Supabase의 상태를 `approved`로 지정해야 합니다. 이후 `GET /api/device?id=...`가 서버 상태와 해당 개인키 서명을 검사해서 승인 결과를 반환합니다. 승인 전에는 브라우저가 자료를 표시하지 않고, 보호 메모 API도 미승인 요청을 403으로 거부합니다.
+
+**서명과 서버 측 권한:** `src/device-proof.mjs`는 `GET/POST/PUT/DELETE /api/notes` 및 단건 메모, 반 공지와 강사 관리 자료 요청에서 검증된 사용자 ID·승인 기기의 공개키·ECDSA P-256 서명·시각·일회용 nonce를 확인합니다. 서명은 HTTP 메서드, 정확한 URL 경로와 쿼리, 요청 본문 SHA-256, 시각, nonce에 결합되므로 경로·수정 본문을 바꾸면 거부됩니다. 재전송 nonce는 DB의 유일키로 차단합니다. 기기 승인과 별도로 기존 소유자·반 소속·관리자 역할 검증도 유지합니다. 복구 관리자 전용 `POST /api/restore`는 이전 10단계 서명된 심판 복구 토큰 계약을 보존합니다.
+
+**비밀값 보존:** `public/device-client.js`는 개인키를 추출 불가 `CryptoKey`로 **현재 화면의 JS 메모리에서만** 사용합니다. `localStorage`, `sessionStorage`, `IndexedDB`에 기기 개인키를 쓰지 않으며 Supabase Auth `persistSession: false`로 토큰 영속 저장도 비활성화했습니다. **새로고침·앱 재실행으로 이 임시 개인키는 사라지므로 재로그인 및 새 기기 승인 요청이 필요합니다.** 설치 표시나 기존 승인만으로 재시작 후 자동 접근할 수는 없습니다. 지속형 하드웨어 키/WebAuthn 등록·기기 승인 엔진과의 연동은 이번에 구현·실측하지 않았습니다.
+
+**운영 DB/승인:** `sql/production-11-device-approval.sql`을 Supabase 운영 프로젝트에 `stage11_device_approval_proof` 마이그레이션으로 적용했습니다. `stage11_devices`와 `stage11_device_nonces`는 RLS 활성화 및 일반 사용자 DB 직접 권한 회수 상태입니다. 승인 권한은 서버 관리자만 가집니다. 실제 사용자·기기 승인 정보를 임의로 생성하지 않았습니다. 승인된 기기와 서버의 **실제 브라우저 E2E 시험은 관리자 승인 후 수행해야 하며 미실행**입니다.
+
+**검증 순서:** 먼저 무로그인 보호 API → 401, 로그인한 미승인 기기 → 403, 승인 요청 → pending, 관리자가 검증해 approved 지정, 서명된 승인 기기의 정상 메모 조회·추가·변경·삭제 확인, 동일 서명으로 경로·본문 변경 → 403, 재전송 → 403, 앱 오프라인 안내 확인. 기존 1~10단계는 `npm ci`, `npm test`, `npm run decider:test`, `npm run detect:test`, `npm run policy:preview`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`로 회귀 검사합니다. 이 로컬 검사를 실제 계정 승인이나 심판 통과로 표시하지 않습니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
