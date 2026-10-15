@@ -1,4 +1,4 @@
-name: ALEPH stage 7 verification
+name: ALEPH stage 8 verification
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - name: All repository tests
         run: npm test
-      - name: Stage 7 baseline decisions
+      - name: Stage 7 regression decisions
         run: npm run fixture:7
       - name: Decider exercise (all four cases)
         run: npm run decider:test
@@ -31,7 +31,7 @@ jobs:
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 7 local fixture: a normal registered device is allowed; combined atypical hour, unfamiliar network and recent high-volume read signal requests step_up; an unregistered device is denied. A verified engine step-up with authAgeSeconds between 0 and 300 (inclusive) returns allow through the existing registered device rule; other composite events remain step_up. The local four-case decision exercise is required to pass. Real end-to-end re-login, request-binding and data-access checks are NOT EXECUTED because their engine integration is not available in this repository."}' > bundle-notes.json
+          echo '{"explanation":"Stage 8: verified engine service, method, route and exact per-resource path scope each decision. Only individual notes (GET, PUT, DELETE) and read-only class announcements are allowed; note lists, announcement writes, instructor materials and unknown routes are denied. Note API verifies owner_id. Class API verifies stored class membership and manager edits require stored instructor role. Supabase production-8 SQL and membership provisioning are NOT EXECUTED and actual cross-zone requests are NOT VERIFIED; do not interpret fixture and bundle self-check as deployment security validation."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
@@ -42,6 +42,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: aleph-stage-7-submission
+          name: aleph-stage-8-submission
           path: artifacts/submission.json
           if-no-files-found: error
