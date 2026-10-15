@@ -111,10 +111,22 @@ function hasCompositeAnomaly(request, context) {
     && hasRecentHighVolumeEvent(request.recentEvents);
 }
 
+// Only an engine-verified, recent step-up may release an anomalous request.
+// The device registration decision remains independent and takes precedence.
+function hasFreshVerifiedStepUp(request) {
+  const stepUp = request?.stepUp;
+  return isRecord(stepUp)
+    && stepUp.verified === true
+    && Number.isInteger(stepUp.authAgeSeconds)
+    && stepUp.authAgeSeconds >= 0
+    && stepUp.authAgeSeconds <= 300;
+}
+
 export function decide(request) {
   const context = inspectContextInput(request);
   const registered = request?.deviceRegistered === true;
-  const stepUpRequired = registered && hasCompositeAnomaly(request, context);
+  const stepUpRequired = registered && hasCompositeAnomaly(request, context)
+    && !hasFreshVerifiedStepUp(request);
   return {
     schema: 'aleph.decision.v1',
     requestId: request.requestId,
