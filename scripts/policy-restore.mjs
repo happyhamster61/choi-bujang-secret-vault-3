@@ -5,7 +5,14 @@ import { previewPolicyRestore, restoreTestPolicy } from '../src/policy-restore.m
 const root = resolve(import.meta.dirname, '..');
 const target = resolve(root, 'artifacts', 'stage10-test-policy.json');
 const backup = JSON.parse(await readFile(resolve(root, 'backups', 'stage9-safe-policy.json')));
-const candidate = JSON.parse(await readFile(target));
+let candidate;
+try {
+  candidate = JSON.parse(await readFile(target));
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+  candidate = JSON.parse(await readFile(
+    resolve(root, 'fixtures', 'stage10-damaged-test-policy.json')));
+}
 const plan = previewPolicyRestore(candidate, backup);
 console.log(JSON.stringify(plan, null, 2));
 if (process.argv.includes('--apply')) {
