@@ -12,9 +12,24 @@ const LOCAL_POLICY = Object.freeze({
   recentEventWindowSeconds: 300,
   minimumReadCount: 8,
 });
-const UNUSUAL_NETWORKS = new Set(['unusual', 'first_seen', 'new', 'unknown_network']);
+// The contract does not enumerate the strings below. These aliases interpret
+// explicit engine-provided *virtual* indicators; unknown values remain insufficient.
+const UNUSUAL_NETWORKS = new Set([
+  'unusual', 'first_seen', 'first_time', 'first_seen_network', 'new',
+  'new_network', 'unfamiliar', 'unrecognized', 'untrusted',
+]);
 const USUAL_NETWORKS = new Set(['usual', 'known', 'familiar', 'trusted']);
-const READ_EVENT_KINDS = new Set(['read', 'bulk_read', 'file_read', 'notes_read', 'risk_signal']);
+const READ_EVENT_KINDS = new Set([
+  'read', 'bulk_read', 'file_read', 'notes_read', 'note_read',
+  'read_file', 'read_note', 'file_access', 'notes_access',
+  'mass_read', 'bulk_file_read', 'risk_signal',
+]);
+
+function normalizeIndicator(value) {
+  if (typeof value !== 'string' || value.length > 80) return null;
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/gu, '_');
+  return /^[a-z][a-z0-9_]*$/u.test(normalized) ? normalized : null;
+}
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -57,11 +72,10 @@ function hasAtypicalHour(signals) {
 }
 
 function classifyNetwork(network) {
-  if (typeof network !== 'string' || network.length === 0 || network === 'unknown') {
-    return 'insufficient';
-  }
-  if (UNUSUAL_NETWORKS.has(network)) return 'unusual';
-  if (USUAL_NETWORKS.has(network)) return 'usual';
+  const value = normalizeIndicator(network);
+  if (value === null || value === 'unknown') return 'insufficient';
+  if (UNUSUAL_NETWORKS.has(value)) return 'unusual';
+  if (USUAL_NETWORKS.has(value)) return 'usual';
   return 'insufficient';
 }
 
@@ -72,7 +86,7 @@ function hasUnfamiliarNetwork(signals) {
 function hasRecentHighVolumeEvent(events) {
   let readCount = 0;
   for (const event of events) {
-    if (!READ_EVENT_KINDS.has(event.kind)
+    if (!READ_EVENT_KINDS.has(normalizeIndicator(event.kind))
         || !Number.isFinite(event.ageSeconds)
         || event.ageSeconds < 0
         || event.ageSeconds > LOCAL_POLICY.recentEventWindowSeconds
@@ -80,8 +94,8 @@ function hasRecentHighVolumeEvent(events) {
         || event.count < 0) {
       continue;
     }
+    if (event.count >= LOCAL_POLICY.minimumReadCount - readCount) return true;
     readCount += event.count;
-    if (readCount >= LOCAL_POLICY.minimumReadCount) return true;
   }
   return false;
 }
