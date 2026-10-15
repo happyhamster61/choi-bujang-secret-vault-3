@@ -66,6 +66,14 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 가상 판정기 사례는 등록 메모 GET/PUT/DELETE 허용, 메모 목록 거부, 반 공지 단건 GET 허용·쓰기 거부, 강사 자료 거부, 미등록 기기 거부, 7단계 복합 이상·재확인 300초 이내 규칙 보존으로 구성됩니다. 직접 실행한 판정기 가상 회귀 28개는 통과했습니다. `npm run build -- --local`과 `npm run decider:test`, `npm test`, `npm run bundle`은 GitHub Actions의 단계별 결과로 확인해야 하며 실제 Supabase DB 권한 검증과 구분합니다. 기존 메모·로그인·소유자 검사는 보존하고 화면 메뉴는 변경하지 않았습니다. 현재 Production 배포는 최신 8단계 빌드 지원 커밋에서 READY로 확인되었습니다.
 
+## 9단계 · 도플갱어를 찾고 권한을 거둡니다
+
+`src/detect.mjs`는 `docs/DETECT_EVENTS.md`의 가상 사건 계약에 있는 `at`(시각), `method`(요청 종류), `identity.sub`(가명 사용자)만 읽습니다. 같은 가명 사용자의 `GET` 사건이 어느 연속된 10분 구간(경계 포함)에 **121건 이상**이면 `{ action: 'propose_revocation', reasonCode: 'burst_read', subject }`만 반환합니다. 120건 이하, 서로 다른 사용자, 시간 창 밖의 사건, GET이 아닌 사건은 `{ action: 'observe' }`를 반환합니다. 입력 사건이 시간순이 아니어도 결과는 같습니다.
+
+이 함수는 가상 사건에 대한 **회수 제안만** 반환하고 실제 기기·세션을 폐기하거나 운영 회수 API를 호출하지 않습니다. 현재 저장소에는 운영 반 엔진의 사건 전달·회수 집행 연결 실측이 없으며 `npm run detect:test` 통과를 실제 세션 차단이나 심판 평가로 주장하지 않습니다. 비밀키·토큰·메모 본문·실명·기기 ID·네트워크·지역을 탐지 조건이나 로그에 넣지 않습니다.
+
+`aleph.config.json`의 `step`은 9입니다. 8단계의 메모 소유권 검사, 구역별 API·판정기, 7단계의 복합 이상·5분 추가 확인, 기존 공개 앱 URL과 로그인 설정을 변경하지 않습니다. `npm run detect:test`는 공식 가상 사건 6가지를 검사하며 `npm test`는 10분 경계, 순서 역전, 다른 사용자 분리, 비계약 필드 무시를 포함한 회귀 검사입니다. `npm run build -- --local`은 정적 빌드, `npm run bundle`은 커밋이 끝난 깨끗한 작업 트리에서 제출 JSON과 무로그인 API 자체 점검을 생성합니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
