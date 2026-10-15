@@ -1,0 +1,29 @@
+name: ALEPH stage 7 verification
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: All repository tests
+        run: npm test
+      - name: Stage 7 baseline decisions
+        run: npm run fixture:7
+      - name: Decider exercise
+        run: npm run decider:test
+      - name: Local deployment build
+        run: npm run build -- --local
