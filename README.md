@@ -74,6 +74,8 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 `aleph.config.json`의 `step`은 9입니다. 8단계의 메모 소유권 검사, 구역별 API·판정기, 7단계의 복합 이상·5분 추가 확인, 기존 공개 앱 URL과 로그인 설정을 변경하지 않습니다. `npm run detect:test`는 공식 가상 사건 6가지를 검사하며 `npm test`는 10분 경계, 순서 역전, 다른 사용자 분리, 비계약 필드 무시를 포함한 회귀 검사입니다. `npm run build -- --local`은 정적 빌드, `npm run bundle`은 커밋이 끝난 깨끗한 작업 트리에서 제출 JSON과 무로그인 API 자체 점검을 생성합니다.
 
+**9단계 저장점:** 위 규칙과 기존 1~8단계의 자료실·판정기·구역별 API가 현재 구현 범위입니다. 제출 직전에는 GitHub Actions의 `ALEPH stage 9 verification` 성공 상태, Vercel Production READY 및 제출 Bundle의 9단계·커밋 일치를 확인합니다. 심판 제출은 사용자가 직접 진행합니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
