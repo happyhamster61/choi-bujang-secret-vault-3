@@ -48,9 +48,9 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 ## 7단계 · 평소와 다른 접속은 다시 확인합니다
 
-`src/decider.mjs`는 계약 입력의 출처·형식을 확인하고, 제공된 가상 fixture의 세 값(`hour: 3`, `network: unusual`, `risk_signal`의 `ageSeconds: 60`, `count: 20`)이 함께 있는 등록 기기 요청에만 `step_up`을 반환합니다. 정상 fixture는 `allow`, 미등록 또는 등록 미확인 기기는 기존 `deny`입니다. 이 값 조합은 fixture 연습 범위이며 실제 심판 기준으로 일반화하지 않습니다. `judge_fixture`는 실제 위치·네트워크 증거가 아닙니다.
+`src/decider.mjs`는 계약의 `signals`와 `recentEvents`만 검사합니다. 등록 기기에서 정수 시각 21~23시 또는 0~7시, 로컬 정책상 낯선 네트워크 값, 최근 300초 안의 읽기 관련 사건 수 합계 8 이상이 모두 충족되면 `step_up`을 반환합니다. 네트워크 분류 문자열과 시간·횟수 기준은 계약이 정한 심판 기준이 아니라 fixture와 저장소를 바탕으로 둔 로컬 정책입니다. `risk_signal`은 fixture용 가상 위험 대리 사건이며 실제 파일 읽기 증거가 아닙니다. 정상 등록 기기는 `allow`, 미등록 또는 등록 미확인 기기는 기존 `deny`입니다. `source`는 출처 메타데이터이며 네 번째 이상 조건으로 쓰지 않습니다. `judge_fixture`도 실제 위치·네트워크 증거가 아닙니다.
 
-현재 `docs/DECIDER_REQUEST.md`에는 추가 확인 후 같은 로그인 주체의 재로그인 시각과 전후 요청 연결을 검증하는 계약이 없습니다. 따라서 실제 추가 확인 전 자료 차단과 새 로그인 후 허용은 미구현입니다. 자료 API의 기존 Bearer 로그인·소유자 검사는 유지됩니다. `npm run fixture:7`은 정상 `allow`와 복합 fixture `step_up`을 확인하는 가상 연습이며, 심판 판정이나 실제 재로그인 검증이 아닙니다. `npm run decider:test`의 마지막 재확인 사례는 이 계약 제한으로 `allow`가 되지 않아 확인 필요로 남습니다.
+현재 `docs/DECIDER_REQUEST.md`에는 추가 확인 후 같은 로그인 주체의 재로그인 시각과 전후 요청 연결을 검증하는 계약이 없습니다. 따라서 실제 추가 확인 전 자료 차단과 새 로그인 후 허용은 미구현입니다. 자료 API의 기존 Bearer 로그인·소유자 검사는 유지됩니다. `npm run fixture:7`, `npm run decider:test`, `npm test`는 로컬 가상 요청 및 저장소 테스트이며 심판 판정이나 실제 재로그인 검증이 아닙니다. 재확인 정보만 있는 복합 이상 요청은 계약상 요청 연결을 증명할 수 없으므로 `step_up`을 유지합니다.
 
 `npm run bundle`의 7단계 학생 자기 점검은 실제 배포 주소에 무로그인 `GET /api/notes`를 보내 관찰 결과를 기록합니다. 이 자체 점검은 심판 판정이나 추가 확인 기능의 실측이 아닙니다.
 
