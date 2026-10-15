@@ -64,6 +64,30 @@ export async function requireNotesAccess(authorization) {
   return { supabase, userId: identity.userId };
 }
 
+// Restore accepts only verified student ownership or a signed judge-B fixture.
+// It does not trust any client-supplied owner, role, note body, or token claims.
+export async function requireVerifiedRestoreAccess(authorization) {
+  if (typeof authorization !== 'string' || !authorization.startsWith('Bearer ')) {
+    throw new NotesAccessError(401, 'LOGIN_REQUIRED');
+  }
+  const url = process.env.SUPABASE_URL;
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !secretKey) throw new NotesAccessError(503, 'NOTES_UNAVAILABLE');
+  try {
+    const { supabase, verifyLogin } = getRuntime(url, secretKey);
+    const identity = await verifyLogin(authorization);
+    if (identity?.kind === 'student' && UUID.test(identity.userId ?? '')) {
+      return { supabase, identity };
+    }
+    if (identity?.kind === 'judge' && identity.identity === 'b') {
+      return { supabase, identity };
+    }
+  } catch {
+    throw new NotesAccessError(502, 'NOTES_UNAVAILABLE');
+  }
+  throw new NotesAccessError(401, 'LOGIN_REQUIRED');
+}
+
 export function sendNotesError(response, error) {
   if (error instanceof NotesAccessError) {
     return response.status(error.status).json({ error: error.code });
