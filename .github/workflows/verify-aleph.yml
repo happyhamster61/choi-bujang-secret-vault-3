@@ -1,4 +1,4 @@
-name: ALEPH stage 10 verification
+name: ALEPH stage 11 verification
 
 on:
   push:
@@ -29,23 +29,25 @@ jobs:
         run: npm run detect:test
       - name: Verified baseline policy diff preview
         run: npm run policy:preview
+      - name: Stage 11 device signature and API gates
+        run: node --test test/stage11-device.test.mjs
       - name: Local deployment build
         if: success() || failure()
         run: npm run build -- --local
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 10: a validated SHA256-pinned safe policy baseline from the successful stage 9 commit is used for a reviewed, preview-first test-only policy restoration. Production policy, other services and audit records are not changed. A private, RLS-protected single B training note backup was captured before the stage 10 replay and verified by note UUID, verified owner and content SHA256, with 6 original notes preserved. POST /api/restore accepts verified student-B or signed judge-B bearer identities only and calls a server-only transactional UUID+owner+SHA256 restore function; other notes and historical audit stay intact and successful restorations append an audit event. A simulated tamper and delete recovery was tested inside a rollback-only database transaction, leaving real data unchanged. Actual judge attack and post-recovery end-to-end HTTP tests are NOT EXECUTED. Prior stage 1-9 checks remain required."}' > bundle-notes.json
+          echo '{"explanation":"Stage 11: existing notes PWA has a manifest, 192/512 SVG/PNG icons, app name and offline notice. The service worker caches only a static offline notice and never protected data or credentials. Supabase browser persistSession=false; nonextractable P-256 private device keys remain in JS memory, not browser storage. A verified login may request a device enrollment which starts pending, not automatically approved. A trusted database administrator must independently confirm the pending device. The device status page checks signed key possession. Protected notes and class announcement endpoints require the same authenticated owner, server-recorded approval, ECDSA signature bound to method, path, body SHA-256, timestamp and unique replay nonce, with fail-closed 403 for absent/tampered/replayed proof. Stage 1-10 decider/detect/restore behavior stays intact; actual administrator approval and browser end-to-end success have NOT been measured. Transient keys require a new enrollment after page restart."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
       - name: Check submission bundle identity
         if: success() || failure()
         run: |
-          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==10||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
+          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==11||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: aleph-stage-10-submission
+          name: aleph-stage-11-submission
           path: artifacts/submission.json
           if-no-files-found: error
