@@ -17,5 +17,8 @@
   ],
   "stage10Api": [
     "api/restore.js"
+  ],
+  "stage11Api": [
+    "api/device.js"
   ]
 }
