@@ -9,6 +9,8 @@ function input({ hour = 14, network = 'usual', events = [], source = 'judge_fixt
   region = 'local', deviceRegistered = true, extra = {} } = {}) {
   return {
     requestId: 'stage-7-local-test',
+    // An authorized individual-note route keeps the stage 7 signal tests meaningful.
+    service: 'notes', method: 'GET', route: 'GET /notes/:id', path: '/notes/stage7-test',
     deviceRegistered,
     stepUp: { verified: false, authAgeSeconds: null },
     signals: { source, region, network, hour },
@@ -36,7 +38,7 @@ test('B. 기존 공식 복합 fixture는 step_up이다', () => {
   const { suspicious } = fixtureRequests();
   const response = assertDecision(suspicious, 'step_up');
   assert.equal(response.reasonCode, 'step_up_required');
-  assert.deepEqual(response.ruleIds, ['device_registered', 'step_up_required']);
+  assert.deepEqual(response.ruleIds, ['device_registered', 'resource_zone_allowed', 'step_up_required']);
 });
 
 test('C. 새벽 2시, first_seen, read 10회/30초는 step_up이다', () => {
@@ -128,7 +130,7 @@ test('M. 임의 클라이언트 헤더는 계약 신호가 아니므로 판정�
   assert.deepEqual(inspectContextInput(headerOnly), {
     sourceClass: 'unknown', signalsShapeValid: false, recentEventsShapeValid: false,
   });
-  assertDecision(headerOnly, 'allow');
+  assertDecision(headerOnly, 'deny'); // stage 8: no verified resource route
 });
 
 test('N. 5분 창 안의 여러 읽기 사건 count 합이 8이면 step_up이다', () => {
@@ -194,7 +196,7 @@ test('출처 누락·불명확은 unknown으로 유지하고 출처만으로 이
   assert.deepEqual(inspectContextInput(noContext), {
     sourceClass: 'unknown', signalsShapeValid: false, recentEventsShapeValid: false,
   });
-  assertDecision(noContext, 'allow');
+  assertDecision(noContext, 'deny'); // stage 8: no verified resource route
   assert.deepEqual(noContext, before);
 });
 
