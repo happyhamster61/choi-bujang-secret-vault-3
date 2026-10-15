@@ -54,6 +54,14 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 `npm run bundle`의 7단계 학생 자기 점검은 실제 배포 주소에 무로그인 `GET /api/notes`를 보내 관찰 결과를 기록합니다. 이 자체 점검은 심판 판정이나 추가 확인 기능의 실측이 아닙니다.
 
+## 8단계 · 자료마다 갈 수 있는 구역을 나눕니다
+
+- 등록 기기·복합 이상 시간/네트워크/읽기 사건·5분 이내 엔진 추가 확인을 유지하면서, `src/decider.mjs`는 엔진이 제공한 `service`, `method`, `route`, `path`를 함께 확인합니다. 메모는 단건 ID 경로의 GET/PUT/DELETE만 허용합니다. `/notes` 전체 목록, 기능형 `/notes/export`, 구역 불명 요청은 거부하며 가상 ID를 UUID로 제한하지 않습니다. 반 공지는 단건 GET만 가능하고 POST/PUT/PATCH/DELETE는 거부합니다. 강사 자료는 학생 판정기에서 언제나 거부합니다.
+- `aleph.config.json`은 8단계이며 정확한 허용 경로만 포함합니다. 기존 `/api/notes`의 자체 소유자별 목록·새 메모 생성은 레거시 UI용으로 유지하지만, 엔진의 학생 정책에는 등록하지 않습니다.
+- 메모 원본은 기존 `training_notes.note_uuid`와 `owner_id`를 보존하고 서버에서 확인합니다. 새 반 공지와 강사 자료는 `training_zone_resources`의 별도 `resource_id`, `zone`, `class_id`로 구분합니다. 반 공지 조회 시 서버는 `training_class_memberships`의 동일 반 소속 여부를 확인합니다. 공지 수정은 학생 판정기의 허용 경로 밖의 `/api/admin/class-announcements/:id`에서만 관리하며, 서버에 저장된 `instructor` 역할을 확인합니다. 요청 본문의 `role`은 신뢰하지 않습니다.
+- **실제 배포 전에** 관리자 자격으로 `sql/production-8-resource-zones.sql`을 Supabase SQL Editor에 적용하고 실제 학생·강사 반 소속을 관리자 측에서 등록해야 합니다. 이 SQL을 적용하지 않으면 새 공지 API는 DB 오류로 동작할 수 있습니다. 새 공지 또는 강사 자료의 실제 레코드는 관리자 작업 없이는 생성되지 않습니다. 이 DB 적용 및 A/B 계정 간 구역별 API 접근 시험은 **아직 실측되지 않았으며**, 저장소 테스트 통과로 대신할 수 없습니다.
+- `npm test`, `npm run decider:test`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`은 별개입니다. Bundle의 무로그인 확인은 실제 GET `/api/notes` 응답만 기록하며 구역 간 접근의 실제 실측이라고 주장하지 않습니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
