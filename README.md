@@ -76,6 +76,18 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 **9단계 저장점:** 위 규칙과 기존 1~8단계의 자료실·판정기·구역별 API가 현재 구현 범위입니다. 제출 직전에는 GitHub Actions의 `ALEPH stage 9 verification` 성공 상태, Vercel Production READY 및 제출 Bundle의 9단계·커밋 일치를 확인합니다. 심판 제출은 사용자가 직접 진행합니다.
 
+## 10단계 · 백업에서 자료실을 되살립니다
+
+**안전한 사본 확인:** 9단계 심판 100점 통과 뒤, 10단계 침공 전에 확인한 Git 커밋 `cbdbbed3bb5f2c97bb5efeb82c0d9e7ef750c27c`의 구역별 안전 정책을 `backups/stage9-safe-policy.json`에 보관하고 SHA-256 `93e7db2e27ce5b19fc7f4125b2a0d65e0e4d3b080265814c156f229db253c6ab`로 고정했습니다. `npm run policy:preview`는 고정 해시를 검사한 다음 `fixtures/stage10-damaged-test-policy.json` 또는 `artifacts/stage10-test-policy.json`의 변경된 허용 경로·규칙 목록과 복구 대상 버전을 출력하며 실제 정책을 건드리지 않습니다. 사본이 없거나 해시가 다르면 실행을 중단합니다. 시험 정책만 반영할 때는 미리보기의 `safeHash`를 확인하고 `node scripts/policy-restore.mjs --apply --confirm-sha256=<확인한 safeHash>`를 실행합니다. 이 명령은 `artifacts/stage10-test-policy.json`에만 써서 다른 서비스 설정·감사 이력을 보존합니다. **운영 판정기 및 운영 보안 정책을 자동으로 되돌리는 기능은 포함하지 않았습니다.**
+
+**B 단건 복원:** 10단계 침공을 준비하면서 운영 Supabase에 `stage10_private_verified_note_backup` 마이그레이션을 적용했습니다. 기존 6건의 가상 메모와 A 소유 4건·B 소유 1건·미소유 1건 분포를 검증한 다음 **B 한 건만** `public.stage10_note_backups`에 기록했습니다. 사본에는 원래의 `note_uuid`, `owner_id`, 제목, 본문 및 SHA-256이 들어 있으며 공개 저장소·제출 묶음·API 응답에는 본문과 소유자 식별자를 넣지 않습니다. RLS가 활성화돼 있고 `anon`·`authenticated` 역할의 직접 접근은 금지합니다. 사본 생성 시 ID·소유자·제목·내용 해시가 원본과 일치하는지 확인했습니다. 이 백업의 기준 커밋은 위 9단계 커밋이며, 백업을 다시 덮어쓰지 않습니다. SQL 스키마와 복구 함수를 `sql/production-10-verified-backup.sql`에 보관합니다.
+
+**복구 서비스와 경로:** `POST /api/restore` (`api/restore.js`)가 복구 경로이며 `aleph.config.json`의 `restoreRoute`에도 `/api/restore`를 기록했습니다. 검증된 학생 B의 Bearer 로그인 또는 서명이 검증된 심판 B의 토큰에만 적용하며, 선택적 JSON `{"id":"메모UUID"}` 또는 `{"noteId":"메모UUID"}`를 받습니다. 요청 ID를 생략하더라도 서버는 B 사본이 정확히 한 건인 경우에만 복구합니다. **본문·소유자·권한을 요청값으로 받지 않습니다.** 서버 전용 `stage10_restore_verified_note`가 트랜잭션 안에서 사본의 ID·소유자·내용 SHA-256을 검증하고 그 한 건만 UPDATE 또는 INSERT합니다. 다른 메모·운영 정책·기존 감사 기록은 수정하지 않고 성공한 복원 기록은 `stage10_restore_audit`에 추가합니다. 실패 시 서버는 짧은 오류 코드만 반환합니다. 이 경로는 학생 판정기 허용 경로가 아닌 복구 관리 경로입니다.
+
+**복원 시험:** 운영 DB에서 B 메모를 일시적으로 변조·삭제하는 시나리오를 트랜잭션 내부에서 각각 테스트하고, 백업 해시로 복원됐는지 확인한 뒤 **시험 전체를 롤백**했습니다. 실제 자료와 복원 감사 기록은 변하지 않았습니다. 이는 DB 내부 복구 함수의 시험이며, 심판이 공격한 뒤 실제 HTTP `POST /api/restore`를 호출한 종단 간 시험은 **미실행**입니다.
+
+**1~9단계 재시험 순서:** (1) 백업 `baseline_commit`·해시와 정책 미리보기를 검증하고 복원 대상 한 건만 확인 (2) B의 변조·삭제 및 POST 복구 후 ID·소유자·SHA-256 비교 (3) 로그인 전 `GET /api/notes` 접근 401 확인 (4) A 정상 단건 GET/PUT/DELETE 및 B의 A 메모 요청 404 확인 (5) 로그인·기기 등록/미등록·추가 인증 300초/301초 분기 확인 (6) 메모 목록 차단·반 공지 쓰기 거부·강사 자료 차단 및 서버 소유자 검사 (7) 10분 안 120/121회 탐지 observe/propose_revocation 확인 (8) 기타 기존 API·XDR 회귀 실행 및 감사 이력 보존 비교. `npm ci`, `npm test`, `npm run decider:test`, `npm run detect:test`, `npm run policy:preview`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`로 코드/가상 연습과 제출 자료를 검사합니다. **실제 A/B 브라우저 로그인 및 심판 침공 후 1~9단계 HTTP 재전송은 아직 미실행이며, 테스트 결과를 만들어 기록하지 않습니다.**
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
