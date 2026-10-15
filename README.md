@@ -59,7 +59,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 - 등록 기기·복합 이상 시간/네트워크/읽기 사건·5분 이내 엔진 추가 확인을 유지하면서, `src/decider.mjs`는 엔진이 제공한 `service`, `method`, `route`, `path`를 함께 확인합니다. 메모는 단건 ID 경로의 GET/PUT/DELETE만 허용합니다. `/notes` 전체 목록, 기능형 `/notes/export`, 구역 불명 요청은 거부하며 가상 ID를 UUID로 제한하지 않습니다. 반 공지는 단건 GET만 가능하고 POST/PUT/PATCH/DELETE는 거부합니다. 강사 자료는 학생 판정기에서 언제나 거부합니다.
 - `aleph.config.json`은 8단계이며 정확한 허용 경로만 포함합니다. 기존 `/api/notes`의 자체 소유자별 목록·새 메모 생성은 레거시 UI용으로 유지하지만, 엔진의 학생 정책에는 등록하지 않습니다.
 - 메모 원본은 기존 `training_notes.note_uuid`와 `owner_id`를 보존하고 서버에서 확인합니다. 새 반 공지와 강사 자료는 `training_zone_resources`의 별도 `resource_id`, `zone`, `class_id`로 구분합니다. 반 공지 조회 시 서버는 `training_class_memberships`의 동일 반 소속 여부를 확인합니다. 공지 수정은 학생 판정기의 허용 경로 밖의 `/api/admin/class-announcements/:id`에서만 관리하며, 서버에 저장된 `instructor` 역할을 확인합니다. 요청 본문의 `role`은 신뢰하지 않습니다.
-- **실제 배포 전에** 관리자 자격으로 `sql/production-8-resource-zones.sql`을 Supabase SQL Editor에 적용하고 실제 학생·강사 반 소속을 관리자 측에서 등록해야 합니다. 이 SQL을 적용하지 않으면 새 공지 API는 DB 오류로 동작할 수 있습니다. 새 공지 또는 강사 자료의 실제 레코드는 관리자 작업 없이는 생성되지 않습니다. 이 DB 적용 및 A/B 계정 간 구역별 API 접근 시험은 **아직 실측되지 않았으며**, 저장소 테스트 통과로 대신할 수 없습니다.
+- `sql/production-8-resource-zones.sql`은 연결된 Supabase 운영 프로젝트에 `stage8_resource_zones` 마이그레이션으로 적용했습니다. 기존 메모 6건은 보존됐고, 신규 두 테이블의 RLS 활성화 및 `anon`·`authenticated` 직접 권한 없음도 확인했습니다. 반 소속과 구역 자료 테이블은 빈 상태입니다. 8단계 지침은 임의 학생·강사 계정 생성이나 강사 권한 부여를 요구하지 않으므로 실제 신원 확인 없이 데이터를 넣지 않습니다. 구역별 API는 자료가 없으면 자료를 공개하지 않으며, 실제 학생·강사 반 소속 및 A/B 계정의 종단 간 구역 접근 실측은 **미실행**입니다. 로컬 가상 테스트 성공은 그 실측을 대신하지 않습니다.
 - `npm test`, `npm run decider:test`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`은 별개입니다. Bundle의 무로그인 확인은 실제 GET `/api/notes` 응답만 기록하며 구역 간 접근의 실제 실측이라고 주장하지 않습니다.
 
 ### 8단계 저장점 확인
