@@ -104,6 +104,8 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 **검증 순서:** 먼저 무로그인 보호 API → 401, 로그인한 미승인 기기 → 403, 승인 요청 → pending, 관리자가 검증해 approved 지정, 서명된 승인 기기의 정상 메모 조회·추가·변경·삭제 확인, 동일 서명으로 경로·본문 변경 → 403, 재전송 → 403, 앱 오프라인 안내 확인. 기존 1~10단계는 `npm ci`, `npm test`, `npm run decider:test`, `npm run detect:test`, `npm run policy:preview`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`로 회귀 검사합니다. 이 로컬 검사를 실제 계정 승인이나 심판 통과로 표시하지 않습니다.
 
+**11단계 저장점:** 기존 1~10단계 기능과 안전 정책을 보존하고 설치형 PWA 설정, 오프라인 안내, 서버 기반 기기 승인 요청·상태 조회, 보호 API의 기기별 요청 서명 검사 및 재전송 거부를 추가했습니다. 앱 설치나 승인 요청 버튼만으로 권한을 부여하지 않습니다. 기기 개인키와 토큰은 브라우저 영구 저장소에 쓰지 않습니다. 실제 관리자 승인과 승인 후 브라우저 종단 간 정상 접근은 아직 실측하지 않았습니다. 제출 묶음은 커밋 후 GitHub Actions의 `ALEPH stage 11 verification`에서 생성합니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
