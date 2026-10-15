@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "BYTE BACK 안전 자료실",
+  "short_name": "BYTE BACK",
+  "description": "서버 승인을 받은 기기에서만 보호 자료에 접근하는 설치형 웹 자료실",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101a28",
+  "theme_color": "#101a28",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
