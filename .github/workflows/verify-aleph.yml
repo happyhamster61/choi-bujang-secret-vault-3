@@ -42,7 +42,7 @@ jobs:
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 7 composite anomaly detection uses engine provided hour, network and recent read event signals. Missing and unrecognized values are not promoted to anomalies. Normal registered devices are allowed and unregistered devices are denied."}' > bundle-notes.json
+          echo '{"explanation":"Stage 7 local fixture: a normal registered device is allowed; combined atypical hour, unfamiliar network and recent high-volume read signal requests step_up; an unregistered device is denied. Real re-login after step-up is NOT EXECUTED and NOT VERIFIED: the published engine contract cannot bind stepUp.verified to a fresh login and the original local exercise expects allow. No bypass has been added. The local exercise fails this expected allow; the limitation is disclosed rather than changing the test."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
