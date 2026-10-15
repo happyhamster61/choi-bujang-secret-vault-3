@@ -1,3 +1,4 @@
+import { requireApprovedDevice } from '../../../src/device-proof.mjs';
 import { sendNotesError, readJsonBody, validNoteFields,
   NotesAccessError } from '../../../src/notes-service.mjs';
 import { RESOURCE_ZONES, resourceAndMembership, resourceIdFromRoute,
@@ -14,6 +15,7 @@ export default async function handler(request, response) {
   try {
     const id = resourceIdFromRoute(request);
     const { supabase, userId } = await verifiedResourceUser(request);
+    await requireApprovedDevice(request, userId, supabase);
     const { resource, membership } = await resourceAndMembership(supabase, userId, id,
       RESOURCE_ZONES.CLASS_ANNOUNCEMENT);
     if (membership.role !== 'instructor') {
