@@ -46,6 +46,14 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 로컬 가상 요청 확인은 저장소 루트에서 `npm run decider:test`를 실행합니다. 출력에서 `등록 기기의 정상 요청`은 통과하고 `미등록 기기의 가상 요청`은 `deny` 및 `device_not_registered`여야 합니다. 별도 접속 프로그램 설치는 필요하지 않습니다. 이 연습은 로컬 가상 요청 결과이며 실제 심판 판정이나 미등록 기기의 운영 접속 시험이 아닙니다.
 
+## 7단계 · 평소와 다른 접속은 다시 확인합니다
+
+`src/decider.mjs`는 계약 입력의 출처·형식을 확인하고, 제공된 가상 fixture의 세 값(`hour: 3`, `network: unusual`, `risk_signal`의 `ageSeconds: 60`, `count: 20`)이 함께 있는 등록 기기 요청에만 `step_up`을 반환합니다. 정상 fixture는 `allow`, 미등록 또는 등록 미확인 기기는 기존 `deny`입니다. 이 값 조합은 fixture 연습 범위이며 실제 심판 기준으로 일반화하지 않습니다. `judge_fixture`는 실제 위치·네트워크 증거가 아닙니다.
+
+현재 `docs/DECIDER_REQUEST.md`에는 추가 확인 후 같은 로그인 주체의 재로그인 시각과 전후 요청 연결을 검증하는 계약이 없습니다. 따라서 실제 추가 확인 전 자료 차단과 새 로그인 후 허용은 미구현입니다. 자료 API의 기존 Bearer 로그인·소유자 검사는 유지됩니다. `npm run fixture:7`은 정상 `allow`와 복합 fixture `step_up`을 확인하는 가상 연습이며, 심판 판정이나 실제 재로그인 검증이 아닙니다. `npm run decider:test`의 마지막 재확인 사례는 이 계약 제한으로 `allow`가 되지 않아 확인 필요로 남습니다.
+
+`npm run bundle`의 7단계 학생 자기 점검은 실제 배포 주소에 무로그인 `GET /api/notes`를 보내 관찰 결과를 기록합니다. 이 자체 점검은 심판 판정이나 추가 확인 기능의 실측이 아닙니다.
+
 ## 시작 틀의 자동 처리
 
 `vercel.json`은 정적 결과물 `public`을 배포합니다. 빌드 명령 `npm run build`는 Vercel이 제공하는 GitHub 저장소 소유자·이름, 커밋 SHA, 배포 URL을 검증하고 `public/aleph.json`을 생성합니다. `publicAppUrl`에는 고정된 Production URL을 기록합니다. 필요한 배포 식별 정보가 없으면 빌드가 실패하므로, 성공한 것처럼 빈 주소를 내보내지 않습니다. `aleph.json`의 내용만으로 저장소 소유권이나 방어 성공을 인정하지 않습니다. 심판이 공개 저장소의 실제 커밋과 배포된 자료를 따로 대조해야 합니다.
