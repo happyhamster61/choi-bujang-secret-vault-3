@@ -26,16 +26,21 @@ jobs:
       - name: Decider exercise
         run: npm run decider:test
       - name: Local deployment build
+        if: success() || failure()
         run: npm run build -- --local
       - name: Prepare non-secret bundle notes
+        if: success() || failure()
         run: |
           echo '{"explanation":"Stage 7 composite anomaly detection uses engine provided hour, network and recent read event signals. Missing and unrecognized values are not promoted to anomalies. Normal registered devices are allowed and unregistered devices are denied."}' > bundle-notes.json
       - name: Create submission bundle
+        if: success() || failure()
         run: npm run bundle
       - name: Check submission bundle identity
+        if: success() || failure()
         run: |
           node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==7||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
       - uses: actions/upload-artifact@v4
+        if: success() || failure()
         with:
           name: aleph-stage-7-submission
           path: artifacts/submission.json
