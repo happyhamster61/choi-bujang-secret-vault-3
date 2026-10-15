@@ -1,3 +1,4 @@
+import { requireApprovedDevice } from '../src/device-proof.mjs';
 import { randomUUID } from 'node:crypto';
 import { NotesAccessError, readJsonBody, requireNotesAccess, sendNotesError,
   toApiNote, validNoteFields } from '../src/notes-service.mjs';
@@ -13,6 +14,7 @@ export default async function handler(request, response) {
 
   try {
     const { supabase, userId } = await requireNotesAccess(request.headers.authorization);
+    await requireApprovedDevice(request, userId, supabase);
     if (request.method === 'GET') {
       const { data, error } = await supabase
         .from('training_notes')
