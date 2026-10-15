@@ -1,4 +1,4 @@
-name: ALEPH stage 9 verification
+name: ALEPH stage 10 verification
 
 on:
   push:
@@ -27,23 +27,25 @@ jobs:
         run: npm run decider:test
       - name: Stage 9 detection (six contract cases)
         run: npm run detect:test
+      - name: Verified baseline policy diff preview
+        run: npm run policy:preview
       - name: Local deployment build
         if: success() || failure()
         run: npm run build -- --local
       - name: Prepare non-secret bundle notes
         if: success() || failure()
         run: |
-          echo '{"explanation":"Stage 9: detect(events) reads only at, method and identity.sub from engine-verified virtual events. The single burst_read rule proposes revocation only when the same pseudonymous subject performs more than 120 GET requests in any inclusive 10-minute time window. Exactly 120, slower events, other methods and mixed identities are observed. No device or session is actually revoked, and no token, full name, note content, network, region or device identifier is logged. Production engine event ingestion and revocation execution are NOT connected or verified. Stage 8 data-scoped API and stage 7 step-up policies remain unchanged. The submission self-check is an unauthenticated notes API probe, not evidence of operational revocation."}' > bundle-notes.json
+          echo '{"explanation":"Stage 10: a validated SHA256-pinned safe policy baseline from the successful stage 9 commit is used for a reviewed, preview-first test-only policy restoration. Production policy, other services and audit records are not changed. A private, RLS-protected single B training note backup was captured before the stage 10 replay and verified by note UUID, verified owner and content SHA256, with 6 original notes preserved. POST /api/restore accepts verified student-B or signed judge-B bearer identities only and calls a server-only transactional UUID+owner+SHA256 restore function; other notes and historical audit stay intact and successful restorations append an audit event. A simulated tamper and delete recovery was tested inside a rollback-only database transaction, leaving real data unchanged. Actual judge attack and post-recovery end-to-end HTTP tests are NOT EXECUTED. Prior stage 1-9 checks remain required."}' > bundle-notes.json
       - name: Create submission bundle
         if: success() || failure()
         run: npm run bundle
       - name: Check submission bundle identity
         if: success() || failure()
         run: |
-          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==9||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
+          node --input-type=module -e "import fs from 'node:fs'; import cp from 'node:child_process'; const b=JSON.parse(fs.readFileSync('artifacts/submission.json','utf8')); const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(); if(b.commit!==sha||b.step!==10||b.schema!=='aleph.defense.submission.v2')process.exit(1); console.log('Submission bundle verified for '+sha);"
       - uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
-          name: aleph-stage-9-submission
+          name: aleph-stage-10-submission
           path: artifacts/submission.json
           if-no-files-found: error
