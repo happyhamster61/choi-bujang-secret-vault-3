@@ -113,15 +113,9 @@
       });
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2"></script>
   <script type="module">
     import { createDeviceGate } from '/device-client.js';
     import { mountOperationsDashboard } from '/operations-dashboard.js';
-    const supabase = window.supabase.createClient(
-      'https://ucjdqkdfcwqiaiisgqkr.supabase.co',
-      'sb_publishable_mJdmH_B-ngOWtTZEA1uLBA_uP5ouuQg',
-      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
-    );
     const authStatus = document.querySelector('#auth-status');
     const loginForm = document.querySelector('#login-form');
     const logoutButton = document.querySelector('#logout-button');
@@ -133,6 +127,7 @@
     const list = document.querySelector('#notes');
     let notesRequestId = 0;
     let activeSession = null;
+    let sessionExpiryTimer = null;
     let editingId = null;
     const deviceGate = createDeviceGate({
       getSession: () => activeSession,
@@ -232,7 +227,14 @@
     }
 
     function showSession(session) {
+      clearTimeout(sessionExpiryTimer);
       activeSession = session?.access_token ? session : null;
+      if (activeSession) {
+        sessionExpiryTimer = setTimeout(() => {
+          showSession(null);
+          authStatus.textContent = '로그인이 만료되었습니다. 다시 로그인해 주세요.';
+        }, Math.max(0, activeSession.expires_at * 1000 - Date.now()));
+      }
       deviceGate.setSession(session);
       operations.onSessionChanged();
       const signedIn = Boolean(session?.user);
@@ -242,9 +244,8 @@
       void loadNotes(session);
     }
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    showSession(sessionData.session);
-    supabase.auth.onAuthStateChange((_event, session) => showSession(session));
+    // Session and access token live only in memory; reloading requires login.
+    showSession(null);
 
     noteForm.addEventListener('submit', async event => {
       event.preventDefault();
@@ -287,17 +288,20 @@
       authStatus.textContent = '로그인 중입니다.';
       const formData = new FormData(loginForm);
       try {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.get('email'),
-          password: formData.get('password')
+        const response = await fetch('/api/auth', {
+          method: 'POST', cache: 'no-store', credentials: 'omit',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: formData.get('email'), password: formData.get('password') })
         });
-        if (error) {
-          authStatus.textContent = `로그인 실패: ${error.message}`;
+        const result = await response.json();
+        if (!response.ok || !result.session?.access_token) {
+          authStatus.textContent = '로그인 실패: 이메일과 비밀번호 또는 서버 상태를 확인해 주세요.';
           return;
         }
+        showSession(result.session);
         loginForm.reset();
       } catch (error) {
-        authStatus.textContent = `로그인 실패: ${error.message || '요청을 완료하지 못했습니다.'}`;
+        authStatus.textContent = '로그인 요청을 완료하지 못했습니다.';
       } finally {
         loginButton.disabled = false;
       }
@@ -306,10 +310,17 @@
     logoutButton.addEventListener('click', async () => {
       logoutButton.disabled = true;
       try {
-        const { error } = await supabase.auth.signOut();
-        authStatus.textContent = error ? `로그아웃 실패: ${error.message}` : '로그아웃 상태입니다.';
+        const token = activeSession?.access_token;
+        // Clear local access and device keys immediately even if the network fails.
+        showSession(null);
+        const response = await fetch('/api/auth', {
+          method: 'DELETE', cache: 'no-store', credentials: 'omit',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        authStatus.textContent = response.ok ? '로그아웃 상태입니다.' :
+          '이 화면에서 로그아웃했습니다. 서버 세션 종료는 확인하지 못했습니다.';
       } catch (error) {
-        authStatus.textContent = `로그아웃 실패: ${error.message || '요청을 완료하지 못했습니다.'}`;
+        authStatus.textContent = '이 화면에서 로그아웃했습니다. 서버 세션 종료는 확인하지 못했습니다.';
       } finally {
         logoutButton.disabled = false;
       }

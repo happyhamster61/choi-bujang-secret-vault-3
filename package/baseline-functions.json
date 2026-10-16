@@ -23,5 +23,8 @@
   ],
   "stage12Api": [
     "api/operations.js"
+  ],
+  "stage5BonusApi": [
+    "api/auth.js"
   ]
 }

@@ -14,7 +14,8 @@
     "xdr": "node scripts/xdr-run.mjs",
     "xdr:run": "node scripts/xdr-run.mjs",
     "policy:preview": "node scripts/policy-restore.mjs",
-    "policy:restore:test": "node scripts/policy-restore.mjs --apply"
+    "policy:restore:test": "node scripts/policy-restore.mjs --apply",
+    "verify:server-login": "node scripts/verify-server-login.mjs"
   },
   "engines": {
     "node": ">=22"
