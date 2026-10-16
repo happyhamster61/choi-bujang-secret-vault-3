@@ -181,3 +181,15 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 `node xdr/privilege/respond.mjs`는 block에만 가상 계정·근거 경보 번호·30분 만료를 가진 `deny-rules.json` 후보를 만들고, alert만 기존 이력을 보존하며 `xdr/alerts.log`에 중복 없이 추가합니다. `activeAccountDenials`는 신뢰된 계정에 대한 미만료 후보만 선택하며 IP만 같다는 이유로 다른 계정을 막지 않습니다. `revokeBlockedSessions`는 신뢰된 계정→세션 연결과 회수 콜백을 주입받아 block 후보 계정의 일치하는 세션만 회수합니다. 로컬 모의 세션으로 호출과 중복·만료·다른 계정 제외를 검증했습니다. **운영 ALEPH 계정·세션 연결 정보와 회수 API는 제공되지 않아 실제 운영 회수는 미실행**입니다. 브라우저가 주장한 계정이나 SDP의 가명 `subjectId`를 fixture 계정과 직접 연결하지 않습니다. `src/decider.mjs`, `RULE_IDS`, fixture와 기존 서비스·DB는 변경하지 않습니다.
 
 출처: [MITRE T1068](https://attack.mitre.org/techniques/T1068/), [MITRE T1078](https://attack.mitre.org/techniques/T1078/). 정상 요청은 기존 ZTNA 판정과 해당 계정에 대한 미만료 XDR 후보 유무를 함께 확인해야 하며, 운영에 연결되기 전에는 후보 파일을 실제 세션 차단으로 보고하지 않습니다.
+
+## 보너스 xdr-06 저장점 · 자료 빼돌리기
+
+`xdr/exfiltration/read-alerts.mjs`는 원본 경보 30건에서 시각·출발 주소·계정·규칙 수준·설명만 30줄로 추출하고 비밀값 형태를 가립니다. `patterns.json`에는 T1041·T1048에 근거한 낯선 목적지 대량 반출, 시간 외 압축 파일 반출, 반복 대용량 전송, 비정상 통로 대량 반출, 자료실 전체 외부 복사, 근거 부족 반출 확인 패턴을 기록했습니다. 50MB·파일 50개·반복 5회는 실습용 로컬 기준이며 MITRE의 공식 임계값이 아닙니다. 업무 시간은 명시된 설명만 사용하며 주소만으로 외부 여부·평판을 추정하지 않습니다.
+
+`decide.mjs`는 같은 패턴을 상수로 내장하고 다른 파일·패키지·파일 입출력·네트워크 없이 `decide(alert)`만 내보냅니다. 실제 전송 설명과 규모 및 이상 단서를 함께 검사합니다. 전송 예정·실패·미전송·0바이트를 성공한 대량 반출로 판단하지 않습니다. 중간 수준의 소량·일회성·준비·실패 경보는 `alert`, 일상 읽기와 작은 정상 동기화는 `record`입니다. ID·계정·IP의 고정 값이나 경보 배열 순서를 정답으로 사용하지 않습니다.
+
+재실행 명령은 `npm run xdr:run -- exfiltration`입니다. 현재 로컬 내용 검토에 따른 분류는 **block 10 · alert 10 · record 10**, 정상 이벤트 10건 중 block은 0건입니다. 공식 심판 정답표나 XDR-06 통과 결과를 확인한 것은 아닙니다. `node xdr/exfiltration/respond.mjs`는 block 10건에만 목적지 주소·근거 경보 번호·30분 만료를 가진 후보를 만들고, alert 10건을 기존 `xdr/alerts.log`에 중복 없이 추가합니다. 출발 PC나 계정 전체를 차단 대상으로 확대하지 않습니다. 반복 실행 시 기존 로그를 보존하고 만료 후보만 갱신합니다.
+
+`activeDestinationDenials`는 신뢰된 목적지와 미만료 규칙을 대조합니다. `applyDestinationBlocks`는 운영 서비스가 제공하는 목적지 차단 콜백을 받아 중복 목적지를 합쳐 적용하는 연결부입니다. 정상 목적지 허용·악성 후보 목적지 선택·만료·중복 방지는 로컬 모의 콜백으로 검증했습니다. **현재 ALEPH 요청 계약에는 확인된 실제 목적지와 운영 차단 API 연결 정보가 없어 운영 트래픽 차단은 미실행**입니다. 브라우저 입력을 신뢰된 목적지로 쓰거나 기존 판정기 계약에 임의 필드를 추가하지 않습니다. `src/decider.mjs`와 기존 정책·서비스·원본 fixture를 보존합니다. 메인 설정은 기존 12단계이며 보너스 과제 때문에 `step`·발급자·허용 경로·Production URL을 바꾸지 않습니다.
+
+근거: [MITRE T1041](https://attack.mitre.org/techniques/T1041/), [MITRE T1048](https://attack.mitre.org/techniques/T1048/). 제출 화면에서는 보너스 XDR-06을 선택하고 이 저장점 커밋을 대상으로 제출해야 하며, 실제 제출은 별도 승인 뒤에만 진행합니다.
