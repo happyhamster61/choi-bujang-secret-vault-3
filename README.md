@@ -141,3 +141,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 `xdr/fixtures/brute-force.json`은 가상 Wazuh 모양 경보입니다. `xdr/brute-force/decide.mjs`는 경보를 `block`, `alert`, `record`로 분류하고, `npm run xdr:run -- brute-force` 또는 `npm run xdr -- brute-force`가 결과를 `xdr/brute-force/result.json`에 씁니다. 다시 실행해 결과를 갱신할 수 있습니다.
 
 `xdr/brute-force/respond.mjs`는 `block` 판단만 만료 시각과 경보 번호가 붙은 `deny-rules.json` 후보로 만들고, 차단·알림 판단을 `xdr/alerts.log`에 한 줄씩 덧붙입니다. 이 후보 파일은 연습 자료이며, 현재 ZTNA 판정기 `src/decider.mjs`에 자동 적용되지는 않습니다. XDR 실행 결과는 가상 경보 연습이지 운영 차단이나 심판 판정의 증거가 아닙니다.
+
+## 12단계 제출 자기 점검 정정
+
+`697a176` 이후 `src/attack-check.mjs`의 제출 점검은 기록된 심판 요청 근거가 없으면 `notes_list_without_login`을 `not_run`으로 유지하며 대체 HTTP 요청을 보내지 않습니다. 대시보드의 별도 실시간 HTTP 점검과 제출 묶음의 기록은 구별합니다. 회귀 검사는 3~12단계 전체에서 이 동작과 배포 주소 검증을 확인합니다. 이전 절의 Bundle이 HTTP 요청을 보낸다는 설명은 현재 동작에 적용되지 않습니다.

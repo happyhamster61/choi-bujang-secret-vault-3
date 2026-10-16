@@ -35,53 +35,29 @@ test('5단계 build identity retains its stage number', () => {
   assert.equal(deploymentIdentity(env, { ...config, step: 5 }).step, 5);
 });
 
-test('5단계 자기 점검은 무로그인 notes API의 응답만 기록한다', async () => {
+test('제출 자기 점검은 실제 심판 증거 없이 HTTP 결과를 만들거나 대체 요청을 보내지 않는다', async () => {
   const originalFetch = globalThis.fetch;
-  let requestUrl;
-  let options;
+  let requests = 0;
   try {
-    globalThis.fetch = async (url, init) => {
-      requestUrl = String(url);
-      options = init;
-      return new Response(JSON.stringify({ error: 'LOGIN_REQUIRED' }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' },
-      });
+    globalThis.fetch = async () => {
+      requests++;
+      throw new Error('An unrecorded check must not send a substitute request');
     };
-    const [result] = await runAttackChecks({ ...config, step: 5 });
-    assert.equal(requestUrl, 'https://student-defense.vercel.app/api/notes');
-    assert.equal(options.method, 'GET');
-    assert.equal(new Headers(options.headers).has('Authorization'), false);
-    assert.equal(options.redirect, 'error');
-    assert.equal(result.observed, 'HTTP 401 LOGIN_REQUIRED');
-    globalThis.fetch = async () => new Response('<html>not the data</html>', { status: 200 });
-    const [failed] = await runAttackChecks({ ...config, step: 5 });
-    assert.equal(failed.observed, 'HTTP 200');
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test('6단계 제출 자기 점검도 무로그인 notes API의 실제 관찰 형식을 사용한다', async () => {
-  const originalFetch = globalThis.fetch;
-  let requestUrl;
-  try {
-    globalThis.fetch = async (url, init) => {
-      requestUrl = String(url);
-      assert.equal(init.method, 'GET');
-      assert.equal(new Headers(init.headers).has('Authorization'), false);
-      return new Response(JSON.stringify({ error: 'LOGIN_REQUIRED' }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' },
-      });
-    };
-    const [result] = await runAttackChecks({ ...config, step: 6 });
-    assert.equal(requestUrl, 'https://student-defense.vercel.app/api/notes');
-    assert.deepEqual(result, {
-      attackId: 'notes_list_without_login',
-      expected: 'HTTP 401 LOGIN_REQUIRED',
-      observed: 'HTTP 401 LOGIN_REQUIRED',
-    });
+    for (let step = 3; step <= 12; step++) {
+      assert.deepEqual(await runAttackChecks({ ...config, step }), [{
+        attackId: 'notes_list_without_login',
+        expected: 'HTTP 401 LOGIN_REQUIRED',
+        observed: 'not_run',
+      }]);
+    }
+    assert.equal(requests, 0);
+    await assert.rejects(runAttackChecks({ ...config, step: 2 }));
+    for (const publicAppUrl of ['http://student-defense.vercel.app',
+      'https://student-defense.vercel.app/?token=test',
+      'https://example.com', 'https://student-defense.vercel.app/api/notes']) {
+      await assert.rejects(runAttackChecks({ ...config, step: 12, publicAppUrl }));
+    }
+    assert.equal(requests, 0);
   } finally {
     globalThis.fetch = originalFetch;
   }
