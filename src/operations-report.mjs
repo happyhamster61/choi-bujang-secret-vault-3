@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
-const stageReport = createRequire(import.meta.url)('../docs/stage-verification.json');
+const require = createRequire(import.meta.url);
+const stageReport = require('../docs/stage-verification.json');
 // Stage 12: combine only observed server results; unavailable is not success.
 export const TOTAL_CHALLENGE_CASES = 41;
 export const STAGE_LABELS = Object.freeze([

@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { runAttackChecks } from '../src/attack-check.mjs';
-const config = createRequire(import.meta.url)('../aleph.config.json');
+const require = createRequire(import.meta.url);
+const config = require('../aleph.config.json');
 import { RULE_IDS } from '../src/decider.mjs';
 import { NotesAccessError, requireNotesAccess, sendNotesError } from '../src/notes-service.mjs';
 import { requireApprovedDevice } from '../src/device-proof.mjs';

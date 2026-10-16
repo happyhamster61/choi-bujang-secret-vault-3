@@ -13,5 +13,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/operations.js": {
+      "includeFiles": "docs/stage-verification.json"
+    }
+  }
 }
