@@ -10,6 +10,7 @@ function redactSecretLikeText(value) {
     .replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/gi, '[redacted private key]')
     .replace(/\bBearer\s+[^\s,;]+/gi, 'Bearer [redacted]')
     .replace(/\b(password|passwd|pwd|token|access[_ -]?token|refresh[_ -]?token|secret|api[_ -]?key|private[_ -]?key|authorization|cookie|credential)\b(\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;&]+)/gi, '$1$2[redacted]')
+    .replace(/\bsb_(?:secret|publishable)_[A-Za-z0-9_-]+\b/g, '[redacted key]')
     .replace(/\bAKIA[0-9A-Z]{16}\b/g, '[redacted key]')
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[redacted token]')
     .replace(/[\r\n]+/g, ' ');
@@ -37,12 +38,13 @@ export function createDenyCandidate(alert, decision, now = new Date()) {
 
   const alertId = cleanField(alert?.id);
   const sourceAddress = cleanField(alert?.data?.srcip);
-  if (!alertId || !sourceAddress) return null;
+  const account = cleanField(alert?.data?.srcuser);
+  if (!alertId || !sourceAddress || !account) return null;
 
   return {
     effect: 'deny',
     sourceAddress,
-    account: cleanField(alert?.data?.srcuser),
+    account,
     alertId,
     expiresAt: new Date(now.getTime() + RULE_TTL_MS).toISOString(),
     reason: redactSecretLikeText(decision.reason),
@@ -85,6 +87,40 @@ export async function buildResponsePlan(alerts, { now = new Date(), decideAlert 
   }
 
   return { counts, decisions, denyCandidates, alertEntries };
+}
+
+// Optional adapter for the trusted session/policy service, never browser input.
+// XDR fixture account names must be mapped by that service; do not compare them
+// directly with the SDP contract's subjectId or an unverified request field.
+export function activeAccountDenials(account, rules, now = new Date()) {
+  if (typeof account !== 'string' || !account.trim() || !Array.isArray(rules)
+      || !(now instanceof Date) || !Number.isFinite(now.getTime())) return [];
+  return rules.filter(rule => rule?.effect === 'deny' && rule.account === account
+    && typeof rule.alertId === 'string' && rule.alertId.length > 0
+    && Number.isFinite(Date.parse(rule.expiresAt))
+    && Date.parse(rule.expiresAt) > now.getTime());
+}
+
+export async function revokeBlockedSessions(plan, {
+  resolveVerifiedSessions, revokeSession, now = new Date(),
+} = {}) {
+  if (typeof resolveVerifiedSessions !== 'function' || typeof revokeSession !== 'function') {
+    throw new TypeError('검증된 계정·세션 연결과 세션 회수 콜백이 필요합니다.');
+  }
+  const revoked = new Set();
+  for (const rule of plan.denyCandidates) {
+    if (!activeAccountDenials(rule.account, [rule], now).length) continue;
+    const sessions = await resolveVerifiedSessions(rule.account);
+    if (!Array.isArray(sessions)) throw new TypeError('검증된 세션 목록이 필요합니다.');
+    for (const session of sessions) {
+      if (session?.account !== rule.account || typeof session.id !== 'string'
+          || !session.id || revoked.has(session.id)) continue;
+      await revokeSession(session.id, { account: rule.account,
+        alertId: rule.alertId, expiresAt: rule.expiresAt });
+      revoked.add(session.id);
+    }
+  }
+  return { revokedCount: revoked.size };
 }
 
 async function readTextOrEmpty(path) {

@@ -1,0 +1,77 @@
+{
+  "schema": "aleph.xdr.deny-candidates.v1",
+  "rules": [
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.11",
+      "account": "user01",
+      "alertId": "pv-01",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "관리자 그룹에 계정 추가 (완전 일치): administrators 그룹 필드, T1078, 추가 설명이 일치; 보조 근거: rule.level 12 보조 신호"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.11",
+      "account": "user01",
+      "alertId": "pv-02",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "관리자 그룹에 계정 추가 (부분 일치): 관리자 권한 취득 설명은 있지만 administrators 그룹 필드가 없음; 처음 관찰되는 관리자 명령 실행 (부분 일치): T1068과 관리자 명령 실행이 있으나 명령의 최초 관찰은 확인되지 않음; 보조 근거: rule.level 12 보조 신호, 관리자 권한 전환 직후 T1068·T1078 관리자 명령 실행"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "198.51.100.11",
+      "account": "user02",
+      "alertId": "pv-03",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "처음 관찰되는 관리자 명령 실행 (부분 일치): T1068과 관리자 명령 실행이 있으나 명령의 최초 관찰은 확인되지 않음; 업무 시간 외 관리자 권한 사용 (완전 일치): 유효한 시각, 시간 외 설명, 관리자 권한 행위가 함께 기록됨; 보조 근거: rule.level 11 보조 신호, 처음 관찰된 출발 주소"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "192.0.2.11",
+      "account": "user03",
+      "alertId": "pv-04",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "관리자 그룹에 계정 추가 (완전 일치): administrators 그룹 필드, T1078, 추가 설명이 일치; 보조 근거: rule.level 12 보조 신호"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.17",
+      "account": "user04",
+      "alertId": "pv-05",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "관리자 그룹에 계정 추가 (완전 일치): administrators 그룹 필드, T1078, 추가 설명이 일치; 보조 근거: rule.level 10 보조 신호"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "198.51.100.17",
+      "account": "user05",
+      "alertId": "pv-06",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "처음 관찰되는 관리자 명령 실행 (부분 일치): T1068과 관리자 세션 권한 변경 설명은 있으나 명령 실행은 없음; 보조 근거: rule.level 12 보조 신호, 처음 관찰된 출발 주소, 높은 규칙 수준의 낯선 주소 관리자 권한 세션 전환"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "192.0.2.17",
+      "account": "user06",
+      "alertId": "pv-07",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "관리자 그룹에 계정 추가 (완전 일치): administrators 그룹 필드, T1078, 추가 설명이 일치; 처음 관찰되는 관리자 명령 실행 (부분 일치): T1068과 관리자 명령 실행이 있으나 명령의 최초 관찰은 확인되지 않음; 업무 시간 외 관리자 권한 사용 (완전 일치): 유효한 시각, 시간 외 설명, 관리자 권한 행위가 함께 기록됨; 보조 근거: rule.level 11 보조 신호"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "203.0.113.27",
+      "account": "user07",
+      "alertId": "pv-08",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "처음 관찰되는 관리자 명령 실행 (부분 일치): T1068과 관리자 명령 실행이 있으나 명령의 최초 관찰은 확인되지 않음; 보조 근거: rule.level 12 보조 신호, 다른 계정의 권한 사용, 높은 규칙 수준의 다른 계정 권한 관리자 명령"
+    },
+    {
+      "effect": "deny",
+      "sourceAddress": "198.51.100.27",
+      "account": "user08",
+      "alertId": "pv-09",
+      "expiresAt": "2026-10-16T01:20:13.412Z",
+      "reason": "관리자 그룹에 계정 추가 (완전 일치): administrators 그룹 필드, T1078, 추가 설명이 일치; 보조 근거: rule.level 10 보조 신호"
+    }
+  ]
+}

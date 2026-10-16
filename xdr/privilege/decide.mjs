@@ -53,6 +53,16 @@ const PATTERNS = Object.freeze([
       return null;
     },
   }),
+  Object.freeze({
+    name: '권한·그룹 변경 확인 필요',
+    condition: "T1078 태그, rule.level 5~9, 계정·그룹의 조회·추가·생성·설명 변경 단서가 함께 있는 경우 관리자 그룹이 아니어도 확인 필요 알림으로 둡니다. 태그나 수준만으로 차단하지 않습니다.",
+    mitre: Object.freeze(['T1078']),
+    evidence: "T1078은 정상 계정의 악용을 다루며, 이 실습의 중간 수준 계정·그룹 경보는 승인 여부와 공격 성공이 확인되지 않아 alert로만 남깁니다. MITRE 태그 자체가 공격 성공을 증명하지는 않습니다.",
+    evaluate(context) {
+      return context.hasTechnique('T1078') && context.accountManagementReview
+        ? { strength: 'partial', evidence: '중간 수준 T1078 계정·그룹 관리 경보' } : null;
+    },
+  }),
 ]);
 
 const BLOCK_THRESHOLD = 0.85;
@@ -80,9 +90,11 @@ export function decide(alert) {
   const account = oneLine(alert?.data?.srcuser);
   const timestampValid = typeof alert?.timestamp === 'string' && Number.isFinite(Date.parse(alert.timestamp));
   const level = levelOf(alert);
-  const techniques = Array.isArray(alert?.rule?.mitre)
-    ? alert.rule.mitre.filter((technique) => typeof technique === 'string')
-    : [];
+  const rawTechniques = Array.isArray(alert?.rule?.mitre)
+    ? alert.rule.mitre : alert?.rule?.mitre?.id;
+  const techniques = Array.isArray(rawTechniques)
+    ? rawTechniques.filter(technique => typeof technique === 'string')
+      .map(technique => technique.trim().toUpperCase()) : [];
   const group = oneLine(alert?.data?.group).toLowerCase();
   const adminGroupChange = group === 'administrators'
     && /관리자 그룹.{0,24}(?:추가|들어|재추가)|다시 관리자(?:로| 그룹에).{0,12}들어/.test(description);
@@ -98,6 +110,8 @@ export function decide(alert) {
   const outsideHours = /수업\s*시간\s*밖|업무처럼\s*보이지\s*않는\s*시각/.test(description);
   const context = {
     adminGroupChange,
+    accountManagementReview: level >= 5 && level < 10
+      && /계정|그룹|account|group/i.test(description),
     explicitNonAdminGroup,
     adminCommand,
     adminCommandExecuted,

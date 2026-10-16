@@ -9,6 +9,7 @@ function redactSecretLikeText(value) {
     .replace(/-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/gi, '[redacted private key]')
     .replace(/\bBearer\s+[^\s,;]+/gi, 'Bearer [redacted]')
     .replace(SECRET_ASSIGNMENT, '$1$2[redacted]')
+    .replace(/\bsb_(?:secret|publishable)_[A-Za-z0-9_-]+\b/g, '[redacted key]')
     .replace(/\bAKIA[0-9A-Z]{16}\b/g, '[redacted key]')
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, '[redacted token]')
     .replace(/[\r\n]+/g, ' ');
