@@ -44,11 +44,17 @@ test('제출 자기 점검은 실제 심판 증거 없이 HTTP 결과를 만들�
       throw new Error('An unrecorded check must not send a substitute request');
     };
     for (let step = 3; step <= 12; step++) {
-      assert.deepEqual(await runAttackChecks({ ...config, step }), [{
-        attackId: 'notes_list_without_login',
-        expected: 'HTTP 401 LOGIN_REQUIRED',
-        observed: 'not_run',
-      }]);
+      const rows = await runAttackChecks({ ...config, step });
+      assert.equal(rows.length, 11);
+      assert.equal(new Set(rows.map(row => row.attackId)).size, 11);
+      rows.forEach((row, index) => {
+        assert.deepEqual(Object.keys(row).sort(), ['attackId', 'expected', 'observed']);
+        assert.ok(row.expected.startsWith((index + 1) + '단계:'));
+        assert.equal(row.observed, 'not_run');
+      });
+      assert.equal(rows[1].attackId, 'notes_list_without_login');
+      rows[0].observed = 'HTTP 200';
+      assert.equal((await runAttackChecks({ ...config, step }))[0].observed, 'not_run');
     }
     assert.equal(requests, 0);
     await assert.rejects(runAttackChecks({ ...config, step: 2 }));

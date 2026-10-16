@@ -112,3 +112,15 @@ test('작전실 렌더링은 별도 API 401을 제출 미실행 행으로 복사
   assert.equal(live.children[4].textContent,'probe-only');
   assert.equal(rows.filter(r=>r.children.length===1&&r.children[0].colSpan===9).length,4);
 });
+
+test('실제 제출 점검 11건은 작전실에서도 미실행이며 공식 41종과 분리된다', async () => {
+  const { runAttackChecks } = await import('../src/attack-check.mjs');
+  const attempts = await runAttackChecks({ step: 12, publicAppUrl: 'https://student-defense.vercel.app' });
+  const probe = sanitizeCheck({ id:'probe', status:'not_run', expected:'HTTP 401' });
+  const groups = buildEvidenceGroups({ probe, submissionAttempts:attempts, deploymentCommit:'a'.repeat(40) });
+  assert.equal(groups.submission.checks.length,11);
+  assert.deepEqual(groups.submission.summary,{observed:0,unexecuted:11,unavailable:0});
+  assert.ok(groups.submission.checks.every(row=>row.observed===null&&row.requestId===null));
+  assert.equal(groups.officialChallenges.checks.length,41);
+  assert.equal(groups.officialChallenges.summary.unexecuted,41);
+});
