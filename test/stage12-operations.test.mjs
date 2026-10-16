@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import operations from '../api/operations.js';
-import { unexecutedChallengeCases, sanitizeCheck, summarizeChecks
+import { unexecutedChallengeCases, sanitizeCheck, summarizeChecks, stageVerificationChecks, buildEvidenceGroups
 } from '../src/operations-report.mjs';
 
 function response() {
@@ -50,4 +50,65 @@ test('작전실 UI에는 본문이 아닌 상태 필드만 표시되고 서명�
   assert.match(js,/deviceGate\.signedFetch\('\/api\/operations'/);
   assert.doesNotMatch(js,/localStorage|sessionStorage|indexedDB/);
   assert.doesNotMatch(js,/note\.body|note\.content/);
+});
+
+test('제출 미실행·작전실 HTTP·과거 단계 검사·공식 41종을 서로 다른 집합으로 유지한다',()=>{
+  const probe=sanitizeCheck({id:'dashboard-probe',name:'별도 API',expected:'HTTP 401',
+    observed:'HTTP 401 LOGIN_REQUIRED',requestId:'student-probe',checkedAt:'2026-10-16T00:00:00Z',
+    status:'observed',source:'live_http_response'});
+  const attempts=[{attackId:'notes_list_without_login',expected:'HTTP 401 LOGIN_REQUIRED',observed:'not_run'}];
+  const groups=buildEvidenceGroups({probe,submissionAttempts:attempts,deploymentCommit:'a'.repeat(40)});
+  assert.deepEqual(Object.keys(groups),['submission','dashboardApi','stageVerification','officialChallenges']);
+  assert.equal(groups.submission.checks[0].status,'not_run');
+  assert.equal(groups.submission.checks[0].observed,null);
+  assert.equal(groups.submission.checks[0].requestId,null);
+  assert.equal(groups.dashboardApi.checks[0].observed,probe.observed);
+  assert.equal(groups.officialChallenges.summary.unexecuted,41);
+  assert.equal(groups.stageVerification.checks.length,22);
+  assert.ok(groups.stageVerification.checks.every(r=>r.testedCommit==='0201e0b21546034283d12baffa05e63c007d1b9e'));
+  assert.equal(attempts[0].observed,'not_run');
+  assert.throws(()=>buildEvidenceGroups({probe,submissionAttempts:[{...attempts[0],observed:'HTTP 401 LOGIN_REQUIRED'}]}));
+});
+test('1~11단계는 로컬·운영 API의 기대값과 실제값을 각각 기록한다',()=>{
+  const checks=stageVerificationChecks();
+  for(let stage=1;stage<=11;stage++){
+    const rows=checks.filter(r=>r.stage===stage);assert.equal(rows.length,2);
+    assert.ok(rows.every(r=>r.expected.length>0));
+    for(const row of rows){
+      if(row.status==='observed'){assert.ok(row.observed);assert.ok(row.checkedAt);}
+      else {assert.equal(row.observed,null);assert.equal(row.checkedAt,null);assert.equal(row.requestId,null);}
+    }
+  }
+  assert.throws(()=>sanitizeCheck({status:'observed',observed:'HTTP 200'}));
+  assert.throws(()=>sanitizeCheck({status:'not_run',observed:'HTTP 401 LOGIN_REQUIRED'}));
+});
+
+test('작전실 렌더링은 별도 API 401을 제출 미실행 행으로 복사하지 않는다',async()=>{
+  const {runInNewContext}=await import('node:vm');
+  function element(){return {children:[],textContent:'',hidden:false,disabled:false,
+    append(...children){this.children.push(...children);},
+    replaceChildren(...children){this.children=children;},
+    setAttribute(){},addEventListener(){}};}
+  const nodes=new Map();
+  const document={querySelector(id){if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);},
+    createElement:()=>element()};
+  const probe=sanitizeCheck({id:'separate-probe',name:'별도 API',expected:'HTTP 401',
+    observed:'HTTP 401 LOGIN_REQUIRED',requestId:'probe-only',checkedAt:'2026-10-16T00:00:00Z',
+    status:'observed',source:'live_http_response'});
+  const groups=buildEvidenceGroups({probe,submissionAttempts:[{attackId:'notes_list_without_login',expected:'HTTP 401',observed:'not_run'}],deploymentCommit:'a'.repeat(40)});
+  const report={schema:'byteback.operations.v1',checkedAt:'2026-10-16T00:00:00Z',deploymentCommit:'a'.repeat(40),
+    evidence:{checks:[probe],groups}};
+  const source=readFileSync(new URL('../public/operations-dashboard.js',import.meta.url),'utf8');
+  const mount=runInNewContext(source.replace('export function mountOperationsDashboard','function mountOperationsDashboard')+'; mountOperationsDashboard',{document});
+  const dashboard=mount({getSession:()=>({access_token:'synthetic-only'}),deviceGate:{isApproved:()=>true,
+    signedFetch:async()=>({ok:true,json:async()=>report})}});
+  await dashboard.reload();
+  const rows=nodes.get('#operations-checks').children;
+  const submission=rows.find(r=>r.children[0]?.textContent==='notes_list_without_login');
+  const live=rows.find(r=>r.children[0]?.textContent==='separate-probe');
+  assert.equal(submission.children[3].textContent,'미실행');
+  assert.equal(submission.children[4].textContent,'—');
+  assert.equal(live.children[3].textContent,'HTTP 401 LOGIN_REQUIRED');
+  assert.equal(live.children[4].textContent,'probe-only');
+  assert.equal(rows.filter(r=>r.children.length===1&&r.children[0].colSpan===9).length,4);
 });

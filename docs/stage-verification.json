@@ -1,0 +1,250 @@
+{
+  "schema": "byteback.stage-verification.v1",
+  "testedCommit": "0201e0b21546034283d12baffa05e63c007d1b9e",
+  "recordedAt": "2026-10-16T01:02:05.058360+00:00",
+  "note": "기존 커밋의 단계별 로컬 검증과 독립 HTTP 관찰 기록입니다. 공식 심판 41종이나 새 배포 커밋의 운영 통과 기록이 아닙니다.",
+  "stages": [
+    {
+      "stage": 1,
+      "name": "배포 식별",
+      "local": {
+        "expected": "배포 식별 검증과 미실행 제출 점검 보존",
+        "observed": "테스트 3개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:58.634710+00:00",
+        "command": "node --test test/r5.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "배포 식별 HTTP 200 및 검사 커밋 일치",
+        "observed": "GET /aleph.json HTTP 200; commit 0201e0b21546034283d12baffa05e63c007d1b9e",
+        "status": "observed",
+        "source": "independent_http_response",
+        "checkedAt": "2026-10-16T01:01:41.677585+00:00",
+        "requestId": "cle1::nh4lv-1792112507562-dbf2b18ae2eb",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 2,
+      "name": "인증 전 자료 보호",
+      "local": {
+        "expected": "무인증 단건·구역 API 거부",
+        "observed": "테스트 6개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:58.805915+00:00",
+        "command": "node --test test/stage8-api.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "GET /api/notes 401 LOGIN_REQUIRED, GET /data.json 404",
+        "observed": "GET /api/notes HTTP 401 LOGIN_REQUIRED; GET /data.json HTTP 404",
+        "status": "observed",
+        "source": "independent_http_response",
+        "checkedAt": "2026-10-16T01:01:47.631290+00:00",
+        "requestId": "cle1::iad1::rcvl9-1792112512254-80090c650659",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 3,
+      "name": "본인 메모 CRUD",
+      "local": {
+        "expected": "로그인 주체를 소유자로 저장하고 본인 CRUD 허용",
+        "observed": null,
+        "status": "not_run",
+        "source": "local_test_not_run",
+        "checkedAt": null,
+        "command": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "A 정상 로그인·승인 기기의 본인 메모 CRUD 성공",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 4,
+      "name": "타인 메모 거부",
+      "local": {
+        "expected": "타인 메모 GET·PUT·DELETE 거부",
+        "observed": null,
+        "status": "not_run",
+        "source": "local_test_not_run",
+        "checkedAt": null,
+        "command": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "B가 A 메모 GET·PUT·DELETE 시 404",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 5,
+      "name": "자료 API 경유",
+      "local": {
+        "expected": "서버 로그인 응답 제한·오류·로그아웃·공개 키 부재",
+        "observed": "테스트 5개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:59.039430+00:00",
+        "command": "node --test test/server-auth.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "정상 사용자의 서버 경유 CRUD와 원본 API 우회 차단",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 6,
+      "name": "등록 기기 판정",
+      "local": {
+        "expected": "등록 기기 allow·미등록 deny·이상 step_up",
+        "observed": "테스트 4개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:59.264410+00:00",
+        "command": "npm run decider:test",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "운영 미등록·회수 기기 접속 거부",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 7,
+      "name": "복합 이상·추가 확인",
+      "local": {
+        "expected": "복합 이상·추가 확인 300초 경계",
+        "observed": "테스트 22개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:59.453490+00:00",
+        "command": "node --test test/decider-input.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "운영 이상 요청 추가 확인과 재인증 후 정상 접근",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 8,
+      "name": "자원 구역 제한",
+      "local": {
+        "expected": "메모·공지·강사 자료 구역 제한",
+        "observed": "테스트 11개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:59.615120+00:00",
+        "command": "node --test test/stage8.test.mjs test/stage8-resource-zones.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "실제 반 소속·강사 권한으로 구역 간 접근 제한",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 9,
+      "name": "폭주 탐지·회수 제안",
+      "local": {
+        "expected": "10분 120회 observe·121회 회수 제안",
+        "observed": "테스트 7개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:59.803511+00:00",
+        "command": "node --test test/stage9-detect.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "운영 사건 전달·회수 제안 집행·회수 후 접속 거부",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 10,
+      "name": "검증된 복구",
+      "local": {
+        "expected": "안전 사본 해시·시험 정책 복구·무인증 복구 거부",
+        "observed": "테스트 4개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:01:59.952071+00:00",
+        "command": "node --test test/stage10-policy.test.mjs test/stage10-restore-api.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "침공 후 B 자료 HTTP 복구 및 ID·소유자·해시 확인",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    },
+    {
+      "stage": 11,
+      "name": "서명된 접속 앱",
+      "local": {
+        "expected": "기기 서명·변조 거부·미승인 거부·메모리 세션",
+        "observed": "테스트 4개 통과 (로컬·모의 검증)",
+        "status": "observed",
+        "source": "local_test_execution",
+        "checkedAt": "2026-10-16T01:02:00.204522+00:00",
+        "command": "node --test test/stage11-device.test.mjs",
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      },
+      "live": {
+        "expected": "승인 기기 브라우저 접근·서명 변조·nonce 재전송 거부",
+        "observed": null,
+        "status": "not_run",
+        "source": "live_api_not_run",
+        "checkedAt": null,
+        "requestId": null,
+        "commit": "0201e0b21546034283d12baffa05e63c007d1b9e"
+      }
+    }
+  ]
+}

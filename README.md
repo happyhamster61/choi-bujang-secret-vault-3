@@ -128,7 +128,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 **학생 구현:** `public/index.html`의 **탈환 작전실 열기**를 누르면 `public/operations-dashboard.js`가 `GET /api/operations`의 실제 서버 응답을 읽어 요약 카드와 요청 결과표를 표시합니다. `api/operations.js`는 로그인 사용자에 대해 승인된 기기의 서명과 nonce를 확인한 후, `stage11_devices`의 승인·대기·회수 상태, `stage10_restore_audit`의 복구 횟수, `stage10_note_backups`의 사본 버전만 읽습니다. **메모 본문·가명 사용자·토큰·기기 개인키는 반환·표시하지 않습니다.** 판정기 규칙의 개수는 `src/decider.mjs`의 실제 `RULE_IDS`에서, 폭주 탐지 기준은 `src/detect.mjs`의 구현 계약에서 따옵니다. 이 정적 구현 정보는 운영 판정·탐지 실행 건수가 아닙니다. 운영 엔진의 개별 판정 기록·탐지 이벤트·회수 실적은 연결되지 않았으므로 **미연결·미확인**을 보여 줍니다. 백업이 로그인 사용자의 자료와 무관하면 버전은 미확인으로 표시합니다. 네트워크/DB 오류는 0건 성공으로 환산하지 않습니다.
 
-**1~11단계 재시험 표:** `src/operations-report.mjs`은 공식 41종 공격의 원본 ID·입력·판정을 받지 못했으므로 `challenge-01`~`challenge-41`이라는 **로컬 자리표시자**를 만들고 각각 `미실행`, 실제 HTTP 결과·요청 ID·검사 시각은 없음으로 표시합니다. `GET /api/operations`은 무인증 `GET /api/notes`를 별도로 실제 호출해 HTTP 상태, 비민감한 오류 코드, 임의 요청 ID, 확인 시각을 `live_http_response` 근거로 표시하되, **이 1건을 공식 41종 완료로 세지 않습니다.** 기대 결과와 실제 결과는 별도 열이며, 실제로 요청하지 않은 A 정상 로그인·B 타인 메모 조회·미등록 기기·회수 신원 재사용·복구 후 서명 없는 변경·구역 밖 조회 등은 미실행 상태를 유지합니다. 심판의 41종 통과는 별도의 심판 기록으로만 판단합니다.
+**공식 41종 자리표시자:** `src/operations-report.mjs`은 공식 41종 공격의 원본 ID·입력·판정을 받지 못했으므로 `challenge-01`~`challenge-41`이라는 **로컬 자리표시자**를 만들고 각각 `미실행`, 실제 HTTP 결과·요청 ID·검사 시각은 없음으로 표시합니다. `GET /api/operations`은 무인증 `GET /api/notes`를 별도로 실제 호출해 HTTP 상태, 비민감한 오류 코드, 임의 요청 ID, 확인 시각을 `live_http_response` 근거로 표시하되, **이 1건을 공식 41종 완료로 세지 않습니다.** 기대 결과와 실제 결과는 별도 열이며, 실제로 요청하지 않은 A 정상 로그인·B 타인 메모 조회·미등록 기기·회수 신원 재사용·복구 후 서명 없는 변경·구역 밖 조회 등은 미실행 상태를 유지합니다. 심판의 41종 통과는 별도의 심판 기록으로만 판단합니다.
 
 **실제 확인 순서 (미실행을 통과로 만들지 않음):** (1) 무인증 메모 목록 GET 401, (2) A 정상 로그인·승인 기기 정상 읽기 200, (3) B가 A 단건 메모 접근 시 404, (4) 미등록·회수된 기기의 접근 403, (5) 7단계 복합 이상 요청의 `step_up`과 검증된 재인증, (6) 8단계 메모 목록·반 공지 쓰기·강사 자료 제한, (7) 9단계 120건 observe/121건 propose_revocation, (8) 10단계 백업 검증·복구 후 소유자·SHA256, (9) 11단계 서명 누락·요청 경로 변조·본문 변조·nonce 재전송 거부, (10) 12단계 화면의 서버 데이터 일치. 안전한 가상 실습과 실제 HTTP 실측, 공식 심판 41종은 별도 결과로 표시해야 합니다. 현재 서버 실측은 대시보드를 승인 기기에서 열 때 실행하는 무인증 API 검사 1개에 한정됩니다.
 
@@ -193,3 +193,31 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 `activeDestinationDenials`는 신뢰된 목적지와 미만료 규칙을 대조합니다. `applyDestinationBlocks`는 운영 서비스가 제공하는 목적지 차단 콜백을 받아 중복 목적지를 합쳐 적용하는 연결부입니다. 정상 목적지 허용·악성 후보 목적지 선택·만료·중복 방지는 로컬 모의 콜백으로 검증했습니다. **현재 ALEPH 요청 계약에는 확인된 실제 목적지와 운영 차단 API 연결 정보가 없어 운영 트래픽 차단은 미실행**입니다. 브라우저 입력을 신뢰된 목적지로 쓰거나 기존 판정기 계약에 임의 필드를 추가하지 않습니다. `src/decider.mjs`와 기존 정책·서비스·원본 fixture를 보존합니다. 메인 설정은 기존 12단계이며 보너스 과제 때문에 `step`·발급자·허용 경로·Production URL을 바꾸지 않습니다.
 
 근거: [MITRE T1041](https://attack.mitre.org/techniques/T1041/), [MITRE T1048](https://attack.mitre.org/techniques/T1048/). 제출 화면에서는 보너스 XDR-06을 선택하고 이 저장점 커밋을 대상으로 제출해야 하며, 실제 제출은 별도 승인 뒤에만 진행합니다.
+
+## 12단계 검사 근거 · 커밋 선택과 재현
+
+**직접 검사한 기준 커밋 SHA:** `0201e0b21546034283d12baffa05e63c007d1b9e`. `docs/stage-verification.json`은 이 커밋의 단계별 기대·실제 결과와 명령·검사 시각·근거 유형을 기록합니다. 읽기 쉬운 표는 [1~11단계 검사 기록](docs/STAGE_VERIFICATION.md)에 있습니다. 로컬 검사 9개 단계는 실행 결과를 기록했고, 본인 CRUD·타인 메모 접근 등 실행하지 않은 검사는 `not_run`으로 남겼습니다. 운영 HTTP 관찰이 있는 단계는 1·2단계뿐이며 나머지 단계의 운영 성공을 뜻하지 않습니다. 이번 보고서 보완 커밋의 번호는 최종 Bundle의 `commit`과 공개 `/aleph.json`에서 확인합니다. 과거 검사 SHA를 새 배포 SHA로 덮어쓰지 않습니다.
+
+**설치 → 검사할 커밋 선택 → 로컬 실행:** Node.js 22 이상에서 아래 순서로 기준 커밋을 고정해 재현합니다. 이번 제출본을 재현하려면 `git switch --detach`의 SHA만 새 Bundle의 40자리 `commit`으로 바꾸고 실제 `git rev-parse HEAD`가 일치하는지 먼저 확인합니다.
+
+```sh
+git clone https://github.com/happyhamster61/choi-bujang-secret-vault-3.git
+cd choi-bujang-secret-vault-3
+git fetch origin
+git switch --detach 0201e0b21546034283d12baffa05e63c007d1b9e
+git rev-parse HEAD
+npm ci
+npm test
+npm run decider:test
+npm run detect:test
+npm run policy:preview
+npm run build -- --local
+```
+
+로컬 빌드는 정적 산출물 검사이며 운영 서버 실행이나 DB 인증을 대신하지 않습니다. 실제 앱은 `aleph.config.json`의 Production URL에서 **로그인 → 기기 승인 요청 → 승인 상태 확인 → 탈환 작전실 열기**로 확인합니다. 운영 배포 빌드는 기존 서버 비밀 환경변수가 필요하고 실제 임시 계정 로그인 검사 후 계정을 정리합니다. 비밀값을 Git이나 제출 Bundle에 넣지 않습니다.
+
+**중지:** 로컬의 실행 중 명령은 `Ctrl+C`로 중단합니다. Production 중지는 권한 있는 관리자가 Vercel의 프로젝트 일시중지/접근 차단 절차로 수행하며 DB나 Git 기록을 삭제하지 않습니다. 중지 기록에는 대상 프로젝트·배포 ID·`/aleph.json`의 커밋 SHA·중지 시각을 남깁니다. 이번 검증에서 실제 서비스 중지는 실행하지 않았습니다.
+
+**복구:** 코드 복구 기준도 위 검사 SHA `0201e0b21546034283d12baffa05e63c007d1b9e`로 명시합니다. 별도 작업 사본에서 같은 clone → fetch → detach → rev-parse 순서로 기준을 선택하고 회귀 검사 후, 그 SHA를 소스로 새 Production 배포를 생성합니다. 검증된 배포의 READY 상태와 공개 커밋을 대조한 뒤 사용합니다. 서버 환경변수와 DB는 보존하며 `git reset --hard`로 다른 작업을 지우지 않습니다. 메모 복구는 코드 복구와 별개로 기존 10단계 검증 백업과 인증된 `/api/restore` 절차를 사용하고 복구 후 소유자·해시·감사 기록을 확인합니다. 이번 문서 보완에서 실제 복원·중지는 실행하지 않았습니다.
+
+**작전실의 네 집합:** (1) 제출 Bundle 자기 점검은 `src/attack-check.mjs`의 `notes_list_without_login: not_run`이며 (2) 작전실 별도 API 응답은 그 화면이 따로 보낸 학생 자기 점검, (3) 1~11단계 표는 각 `testedCommit`에 묶인 과거 로컬/독립 HTTP 검사, (4) 공식 41종은 공식 요청별 근거가 없어 미실행입니다. 화면은 각 집합·기대·실제·근거 유형·검사 커밋을 별도로 표시합니다. 작전실 probe ID를 심판 requestId로 취급하거나 별도 API 결과를 Bundle에 복사하지 않습니다. 12단계 심판 통과는 공식 41종 전체 방어 완료를 뜻하지 않습니다.

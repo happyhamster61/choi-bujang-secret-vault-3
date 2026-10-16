@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { runAttackChecks } from '../src/attack-check.mjs';
+const config = createRequire(import.meta.url)('../aleph.config.json');
 import { RULE_IDS } from '../src/decider.mjs';
 import { NotesAccessError, requireNotesAccess, sendNotesError } from '../src/notes-service.mjs';
 import { requireApprovedDevice } from '../src/device-proof.mjs';
-import { unexecutedChallengeCases, sanitizeCheck, summarizeChecks
+import { unexecutedChallengeCases, sanitizeCheck, summarizeChecks, buildEvidenceGroups
 } from '../src/operations-report.mjs';
 
 async function countRows(supabase, table, ownerId = null) {
@@ -38,7 +41,7 @@ async function probeAnonymousNotes(origin) {
     let errorCode = '';
     try {
       const data = await response.json();
-      if (typeof data?.error === 'string') errorCode = data.error.slice(0, 60);
+      if (typeof data?.error === 'string' && /^[A-Z][A-Z0-9_]{0,59}$/.test(data.error)) errorCode = data.error;
     } catch { /* Do not copy response body */ }
     return sanitizeCheck({
       id: 'api-anonymous-notes', name: '무인증 메모 목록 GET',
@@ -83,9 +86,13 @@ export default async function handler(request, response) {
       : { status: 'observed', count: row.count };
     const challengeCases = unexecutedChallengeCases();
     const checks = [probe, ...challengeCases];
+    const deploymentCommit = process.env.VERCEL_GIT_COMMIT_SHA ?? null;
+    const groups = buildEvidenceGroups({probe,
+      submissionAttempts:await runAttackChecks(config), deploymentCommit});
     return response.status(200).json({
       schema:'byteback.operations.v1',
       checkedAt:new Date().toISOString(),
+      deploymentCommit,
       policy: { status:'source_verified', ruleIds:[...RULE_IDS],
         ruleCount:RULE_IDS.length, source:'src/decider.mjs',
         actualEngineDecisions:{status:'not_connected',count:null} },
@@ -96,7 +103,7 @@ export default async function handler(request, response) {
       devices: { approved:tally(deviceApproved), pending:tally(devicePending),
         revoked:tally(deviceRevoked) },
       recovery: { backup:version, ownRestoreAudit:restorus },
-      evidence: { summary:summarizeChecks(checks), checks },
+      evidence: { summary:summarizeChecks(checks), checks, groups },
       note:'실제 HTTP 응답과 DB 카운트만 관측치입니다. 공식 41종은 미실행으로 남겨둡니다.'
     });
   } catch (error) {

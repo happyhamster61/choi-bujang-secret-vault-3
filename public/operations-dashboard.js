@@ -28,7 +28,7 @@ export function mountOperationsDashboard({ getSession, deviceGate }) {
       ? String(value.count) : '미확인';
   }
   function label(row) {
-    if (row?.status === 'observed') return '실측';
+    if (row?.status === 'observed') return row.source === 'local_test_execution' ? '로컬 검증' : 'HTTP 관측';
     if (row?.status === 'unavailable') return '조회 실패';
     return '미실행';
   }
@@ -37,7 +37,6 @@ export function mountOperationsDashboard({ getSession, deviceGate }) {
       || !report.evidence || !Array.isArray(report.evidence.checks)) {
       throw new Error('작전실 보고서 형식이 올바르지 않습니다.');
     }
-    const checks = report.evidence.checks;
     metrics.replaceChildren(
       card('판정기', String(report.policy?.ruleCount ?? '미확인'),
         '저장소에 구현된 규칙 수 · 운영 실측 아님'),
@@ -53,23 +52,39 @@ export function mountOperationsDashboard({ getSession, deviceGate }) {
         ? report.recovery.backup.commit.slice(0, 12) : '미확인',
         '서버 백업 기록에서 조회 · 본문 표시 안 함')
     );
-    checksBody.replaceChildren(...checks.map(check => {
-      const tr = document.createElement('tr');
-      const fields = [check.id, check.name, check.expected,
-        check.observed ?? '—', check.requestId ?? '—',
-        check.checkedAt ?? '—', label(check)];
-      for (const value of fields) {
-        const td = document.createElement('td');
-        td.textContent = String(value);
-        tr.append(td);
+    const groups = report.evidence.groups;
+    const keys = ['submission','dashboardApi','stageVerification','officialChallenges'];
+    if (!groups || keys.some(key => !Array.isArray(groups[key]?.checks))) {
+      throw new Error('구분된 검사 기록이 없습니다.');
+    }
+    const rows = [];
+    const summaries = [];
+    for (const key of keys) {
+      const group = groups[key];
+      const heading = document.createElement('tr');
+      const title = document.createElement('th');
+      title.colSpan = 9;
+      title.textContent = group.label + ' — ' + group.note;
+      heading.append(title); rows.push(heading);
+      for (const check of group.checks) {
+        const tr = document.createElement('tr');
+        const fields = [check.id,check.name,check.expected,
+          check.status === 'not_run' ? '미실행' : check.observed ?? '미확인',
+          check.requestId ?? '—',check.checkedAt ?? '—',label(check),
+          check.source,check.testedCommit ?? '미확인'];
+        for (const value of fields) {
+          const td=document.createElement('td');td.textContent=String(value);tr.append(td);
+        }
+        rows.push(tr);
       }
-      return tr;
-    }));
-    const summary = report.evidence.summary;
-    headline.textContent = '실측 ' + summary.observed + '건 · 미실행 ' +
-      summary.unexecuted + '건 · 조회 실패 ' + summary.unavailable +
-      '건 (공식 41종은 독립적으로 미실행)';
-    stamp.textContent = '서버 확인 시각: ' + (report.checkedAt ?? '미확인');
+      const summary = group.summary;
+      summaries.push(group.label + ': 관측/로컬 기록 ' + summary.observed +
+        ' · 미실행 ' + summary.unexecuted + ' · 조회 실패 ' + summary.unavailable);
+    }
+    checksBody.replaceChildren(...rows);
+    headline.textContent = summaries.join(' / ');
+    stamp.textContent = '서버 확인 시각: ' + (report.checkedAt ?? '미확인') +
+      ' · 현재 배포 커밋: ' + (report.deploymentCommit ?? '미확인');
     status.textContent = '서버 응답을 확인했습니다. 이 화면 자체는 심판 통과 증거가 아닙니다.';
     loaded = true;
   }
