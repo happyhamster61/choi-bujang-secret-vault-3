@@ -2,6 +2,22 @@
 
 이 저장소는 1단계에서 학생 본인이 GitHub 저장소와 Vercel 배포를 만드는 출발점입니다. 포함된 메모 네 건은 가상 자료입니다. 실제 학생 자료, 토큰, 비밀키를 넣지 마세요.
 
+## 구현 범위와 제공 구성요소
+
+| 구분 | 구현 및 책임 | 확인 범위 |
+| --- | --- | --- |
+| 학생이 만든 자료실·API | 로그인 토큰 검증, 메모 소유권 검사, 구역별 접근 제한, 기기 서명·nonce 검사, B 단건 복구 | 저장소의 `api/`, `src/notes-service.mjs`, `src/device-proof.mjs` 등 |
+| 학생이 만든 판정·탐지 규칙 | `src/decider.mjs`의 계약 입력 판정, `src/detect.mjs`의 폭주 조회 회수 제안 | 함수 결과와 로컬 가상 시험; 회수 제안 자체는 집행이 아님 |
+| 학생이 만든 앱·작전실 | `public/` 설치형 앱과 `api/operations.js`의 인증된 조회 및 상태 표시 | 실제 API·DB 응답, 구현 정보, 미실행·미연결 상태를 구분 |
+| 제공된 ALEPH SDP 엔진 | 계약에 따라 신원·기기·추가 인증 사실을 확인해 판정 입력을 전달하고, 운영 사건 전달과 회수 집행을 담당 | 학생이 엔진 자체를 구현한 것이 아님; 저장소에서 운영 연결을 실측하지 않은 부분은 미연결로 표시 |
+| 공식 ALEPH 심판 | 제출본에 요청을 보내고 요청 기록·방어 결과를 평가 | 로컬 테스트나 학생 자기 점검으로 대체하지 않음 |
+
+학생 API의 토큰·서명 검증은 이 저장소에서 구현한 보호 기능입니다. 제공 엔진이 확인해 전달하는 판정 입력과 별개이며, 로컬 함수 시험만으로 엔진의 운영 사건 수집·회수 집행까지 연결됐다고 주장하지 않습니다.
+
+## 제출 점검의 기록 원칙
+
+`src/attack-check.mjs`의 `observed`에는 해당 점검에서 실제로 보낸 요청의 결과만 기록합니다. `expected`는 기대값이며 관측값의 근거가 아닙니다. 실행하지 않았거나 해당 요청 기록이 없는 점검은 `not_run`으로 둡니다. 현재 `notes_list_without_login`은 `not_run`이며, Bundle 생성 시 대체 요청을 보내거나 HTTP 성공·거부 결과를 만들어 넣지 않습니다. 대시보드의 별도 실시간 요청, 로컬 모의 응답, 공식 심판 요청은 서로 다른 근거이므로 옮겨 적지 않습니다.
+
 ## 학생이 하는 일: 세 걸음
 
 1. GitHub 계정을 만듭니다.
@@ -36,9 +52,9 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 `vercel.json`에는 현재 `/` 응답에 `X-Content-Type-Options: nosniff` 헤더가 설정되어 있습니다. API 경로 전체에 적용되는 별도 보안 헤더 설정은 없습니다.
 
-로컬 관련 검사는 `npm run test:r5`와 `npm run build -- --local`입니다. 제출 묶음은 저장 설정을 커밋한 뒤 깨끗한 Git 작업 트리에서 `npm run bundle`로 생성합니다. 자기 점검은 실제 배포 주소의 무로그인 `GET /api/notes` 요청을 보내 관찰 결과를 기록하며 심판 판정은 아닙니다. A/B 계정의 CRUD 확인은 별도의 실제 배포·Supabase 환경 점검입니다.
+로컬 관련 검사는 `npm run test:r5`와 `npm run build -- --local`입니다. 제출 묶음은 저장 설정을 커밋한 뒤 깨끗한 Git 작업 트리에서 `npm run bundle`로 생성합니다. 현재 제출 자기 점검의 무로그인 항목은 요청 기록이 없어 `not_run`으로 기록하며 심판 판정은 아닙니다. A/B 계정의 CRUD 확인은 별도의 실제 배포·Supabase 환경 점검입니다.
 
-로컬 정적 빌드는 `npm run build -- --local`로 확인합니다. 제출 자료 생성은 Git 작업 트리가 깨끗하고 저장 설정이 커밋된 상태에서 `npm run bundle`을 실행합니다. bundle은 실제 배포에 보낸 무로그인 요청의 관찰 결과만 자체 점검으로 기록하며, 실제 심판 판정으로 간주하지 않습니다.
+로컬 정적 빌드는 `npm run build -- --local`로 확인합니다. 제출 자료 생성은 Git 작업 트리가 깨끗하고 저장 설정이 커밋된 상태에서 `npm run bundle`을 실행합니다. Bundle은 현재 무로그인 점검을 `not_run`으로 기록하며, 실제 심판 판정으로 간주하지 않습니다.
 
 ## 6단계 · 등록 기기 판정
 
@@ -52,7 +68,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 심판의 7단계 추가 안내에 따라 엔진이 검증해 전달한 `stepUp.verified === true`와 `authAgeSeconds`가 정수 0~300초인 경우에만 복합 이상 요청의 추가 확인을 통과시켜 등록 기기 규칙에 따릅니다. 301초 이상이거나 미확인·누락·잘못된 값이면 `step_up`을 유지하고, 미등록 기기는 언제나 `deny`입니다. 클라이언트가 제공한 임의 확인값을 신뢰하지 않으며, 판정기는 계약에 없는 요청 필드를 생성하지 않습니다. `npm run fixture:7`, `npm run decider:test`, `npm test`는 로컬 가상 요청 및 저장소 테스트입니다. 공개 엔진 계약에는 동일 로그인 주체의 새 로그인 시각과 요청 연결을 별도로 실측할 자료가 없어 **실제 자료 차단·재로그인 후 허용의 종단 간 실측은 미실행**입니다. 로컬 4개 가상 판정은 정상·미등록·복합 이상·엔진 확인 후 허용을 각각 확인합니다.
 
-`npm run bundle`의 7단계 학생 자기 점검은 실제 배포 주소에 무로그인 `GET /api/notes`를 보내 관찰 결과를 기록합니다. 이 자체 점검은 심판 판정이나 추가 확인 기능의 실측이 아닙니다.
+`npm run bundle`의 무로그인 학생 자기 점검은 현재 요청 기록이 없어 `not_run`을 기록합니다. 이 자체 점검은 심판 판정이나 추가 확인 기능의 실측이 아닙니다.
 
 ## 8단계 · 자료마다 갈 수 있는 구역을 나눕니다
 
@@ -60,7 +76,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 - `aleph.config.json`은 8단계이며 정확한 허용 경로만 포함합니다. 기존 `/api/notes`의 자체 소유자별 목록·새 메모 생성은 레거시 UI용으로 유지하지만, 엔진의 학생 정책에는 등록하지 않습니다.
 - 메모 원본은 기존 `training_notes.note_uuid`와 `owner_id`를 보존하고 서버에서 확인합니다. 새 반 공지와 강사 자료는 `training_zone_resources`의 별도 `resource_id`, `zone`, `class_id`로 구분합니다. 반 공지 조회 시 서버는 `training_class_memberships`의 동일 반 소속 여부를 확인합니다. 공지 수정은 학생 판정기의 허용 경로 밖의 `/api/admin/class-announcements/:id`에서만 관리하며, 서버에 저장된 `instructor` 역할을 확인합니다. 요청 본문의 `role`은 신뢰하지 않습니다.
 - `sql/production-8-resource-zones.sql`은 연결된 Supabase 운영 프로젝트에 `stage8_resource_zones` 마이그레이션으로 적용했습니다. 기존 메모 6건은 보존됐고, 신규 두 테이블의 RLS 활성화 및 `anon`·`authenticated` 직접 권한 없음도 확인했습니다. 반 소속과 구역 자료 테이블은 빈 상태입니다. 8단계 지침은 임의 학생·강사 계정 생성이나 강사 권한 부여를 요구하지 않으므로 실제 신원 확인 없이 데이터를 넣지 않습니다. 구역별 API는 자료가 없으면 자료를 공개하지 않으며, 실제 학생·강사 반 소속 및 A/B 계정의 종단 간 구역 접근 실측은 **미실행**입니다. 로컬 가상 테스트 성공은 그 실측을 대신하지 않습니다.
-- `npm test`, `npm run decider:test`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`은 별개입니다. Bundle의 무로그인 확인은 실제 GET `/api/notes` 응답만 기록하며 구역 간 접근의 실제 실측이라고 주장하지 않습니다.
+- `npm test`, `npm run decider:test`, `npm run fixture:7`, `npm run build -- --local`, `npm run bundle`은 별개입니다. Bundle의 무로그인 확인은 현재 `not_run`으로 기록하며 구역 간 접근의 실제 실측이라고 주장하지 않습니다.
 
 ### 8단계 저장점 확인
 
@@ -128,7 +144,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 `aleph.config.json`에는 현재 저장소 주소와 고정된 Production `publicAppUrl`이 설정되어 있습니다. 1단계에서는 학생이 이 파일을 편집하지 않습니다. 2단계 이후 코딩 도구가 필요한 설정과 보호 기능을 단계별로 작성합니다. `npm run bundle`과 `bundle-notes.json`도 1단계의 세 걸음에는 포함되지 않습니다.
 
-로컬에서 정적 화면을 확인할 때는 `npm run build -- --local`을 사용합니다. 로컬 실행은 Vercel 배포나 Supabase 연결을 증명하지 않습니다. 저장소의 `src/attack-check.mjs`는 실제 배포가 된 뒤 `/api/notes`의 응답을 확인합니다.
+로컬에서 정적 화면을 확인할 때는 `npm run build -- --local`을 사용합니다. 로컬 실행은 Vercel 배포나 Supabase 연결을 증명하지 않습니다. 저장소의 `src/attack-check.mjs`는 현재 요청 기록이 없는 무로그인 점검을 `not_run`으로 둡니다.
 
 ## 다음 단계의 코딩 도구에 전달할 규칙
 
@@ -144,4 +160,4 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 ## 12단계 제출 자기 점검 정정
 
-`697a176` 이후 `src/attack-check.mjs`의 제출 점검은 기록된 심판 요청 근거가 없으면 `notes_list_without_login`을 `not_run`으로 유지하며 대체 HTTP 요청을 보내지 않습니다. 대시보드의 별도 실시간 HTTP 점검과 제출 묶음의 기록은 구별합니다. 회귀 검사는 3~12단계 전체에서 이 동작과 배포 주소 검증을 확인합니다. 이전 절의 Bundle이 HTTP 요청을 보낸다는 설명은 현재 동작에 적용되지 않습니다.
+`697a176` 이후 `src/attack-check.mjs`의 제출 점검은 기록된 심판 요청 근거가 없으면 `notes_list_without_login`을 `not_run`으로 유지하며 대체 HTTP 요청을 보내지 않습니다. 대시보드의 별도 실시간 HTTP 점검과 제출 묶음의 기록은 구별합니다. 회귀 검사는 3~12단계 전체에서 이 동작과 배포 주소 검증을 확인합니다. 본문의 Bundle 설명도 현재 동작에 맞췄습니다. 사용자가 보고한 기존 12단계 심판 결과는 100점 통과이며, 이 문서 보완 후 새 커밋에 대한 재심사는 별도로 실행하지 않았습니다.
