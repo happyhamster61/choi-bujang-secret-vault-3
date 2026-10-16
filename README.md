@@ -24,7 +24,7 @@
 2. 방어전 1단계 카드의 **Deploy** 버튼을 누릅니다. Vercel에 GitHub로 로그인하고, 새 저장소가 **본인 계정의 Public 저장소**인지 확인한 뒤 Deploy를 누릅니다.
 3. 배포가 끝나면 화면에 나온 `https://…vercel.app` 주소를 방어전 1단계 카드에 붙여넣고 제출합니다. 저장소 주소나 설정 파일은 적지 않습니다.
 
-1단계 시작 당시에는 `/data.json`에서 가상 메모가 공개되었습니다. Production 1부터 이 정적 파일에는 메모를 두지 않습니다. 현재 `/` 화면은 Supabase Auth 이메일 로그인·로그아웃을 제공하고, 세션의 Bearer 토큰을 `/api/notes`에 보냅니다. 서버 함수는 `src/verify-login.mjs`로 토큰을 검증한 뒤 Supabase `training_notes`를 조회합니다. 메모 추가·수정·삭제는 로그인한 사용자만 요청할 수 있습니다.
+1단계 시작 당시에는 `/data.json`에서 가상 메모가 공개되었습니다. Production 1부터 이 정적 파일에는 메모를 두지 않습니다. 현재 `/` 화면은 같은 출처의 `POST /api/auth`·`DELETE /api/auth` 서버 함수로 이메일 로그인·로그아웃을 요청하고, 발급받은 세션의 Bearer 토큰을 `/api/notes`에 보냅니다. 서버 함수는 `src/verify-login.mjs`로 토큰을 검증한 뒤 Supabase `training_notes`를 조회합니다. 메모 추가·수정·삭제는 로그인한 사용자만 요청할 수 있습니다.
 
 ## Production 2 환경 설정
 
@@ -46,7 +46,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 ## 5단계 · 자료 요청을 서버 한곳으로 모으기
 
-브라우저의 메모 목록·추가 요청은 `/api/notes` Vercel 함수로, 단건 조회·수정·삭제 요청은 `/api/notes/:id` 함수로 보냅니다. 브라우저의 Supabase Auth 로그인·로그아웃은 유지합니다. 서버 함수는 Bearer 세션을 검증하고, 검증된 `userId`를 소유자 조건으로 사용합니다. 단건 조회·수정·삭제도 `note_uuid`와 `owner_id`를 함께 확인합니다. 서버 함수의 실제 DB 연결에는 Vercel의 `SUPABASE_URL`, `SUPABASE_SECRET_KEY` 환경변수가 필요합니다.
+브라우저의 메모 목록·추가 요청은 `/api/notes` Vercel 함수로, 단건 조회·수정·삭제 요청은 `/api/notes/:id` 함수로 보냅니다. 로그인·로그아웃도 같은 출처의 `/api/auth` 서버 함수로 보냅니다. 서버 함수는 Bearer 세션을 검증하고, 검증된 `userId`를 소유자 조건으로 사용합니다. 단건 조회·수정·삭제도 `note_uuid`와 `owner_id`를 함께 확인합니다. 서버 함수의 실제 DB 연결에는 Vercel의 `SUPABASE_URL`, `SUPABASE_SECRET_KEY` 환경변수가 필요합니다.
 
 `aleph.config.json`은 5단계를 가리킵니다. `originalApiUrl`은 쿼리 문자열이 없는 HTTPS 원본 자료 API 주소이며, `allowedRoutes`는 구현된 목록·추가·단건 조회·수정·삭제 경로와 일치합니다. `judgeIssuer`와 Production `publicAppUrl`은 기존 값을 유지합니다. SQL 파일의 존재만으로 Supabase 프로젝트에 실제 적용됐는지는 확인할 수 없습니다.
 
@@ -114,7 +114,7 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 
 **서명과 서버 측 권한:** `src/device-proof.mjs`는 `GET/POST/PUT/DELETE /api/notes` 및 단건 메모, 반 공지와 강사 관리 자료 요청에서 검증된 사용자 ID·승인 기기의 공개키·ECDSA P-256 서명·시각·일회용 nonce를 확인합니다. 서명은 HTTP 메서드, 정확한 URL 경로와 쿼리, 요청 본문 SHA-256, 시각, nonce에 결합되므로 경로·수정 본문을 바꾸면 거부됩니다. 재전송 nonce는 DB의 유일키로 차단합니다. 기기 승인과 별도로 기존 소유자·반 소속·관리자 역할 검증도 유지합니다. 복구 관리자 전용 `POST /api/restore`는 이전 10단계 서명된 심판 복구 토큰 계약을 보존합니다.
 
-**비밀값 보존:** `public/device-client.js`는 개인키를 추출 불가 `CryptoKey`로 **현재 화면의 JS 메모리에서만** 사용합니다. `localStorage`, `sessionStorage`, `IndexedDB`에 기기 개인키를 쓰지 않으며 Supabase Auth `persistSession: false`로 토큰 영속 저장도 비활성화했습니다. **새로고침·앱 재실행으로 이 임시 개인키는 사라지므로 재로그인 및 새 기기 승인 요청이 필요합니다.** 설치 표시나 기존 승인만으로 재시작 후 자동 접근할 수는 없습니다. 지속형 하드웨어 키/WebAuthn 등록·기기 승인 엔진과의 연동은 이번에 구현·실측하지 않았습니다.
+**비밀값 보존:** `public/device-client.js`는 개인키를 추출 불가 `CryptoKey`로 **현재 화면의 JS 메모리에서만** 사용합니다. `localStorage`, `sessionStorage`, `IndexedDB`에 기기 개인키를 쓰지 않으며 브라우저의 로그인 세션도 JS 메모리에만 보관하며 토큰을 영속 저장하지 않습니다. **새로고침·앱 재실행으로 이 임시 개인키는 사라지므로 재로그인 및 새 기기 승인 요청이 필요합니다.** 설치 표시나 기존 승인만으로 재시작 후 자동 접근할 수는 없습니다. 지속형 하드웨어 키/WebAuthn 등록·기기 승인 엔진과의 연동은 이번에 구현·실측하지 않았습니다.
 
 **운영 DB/승인:** `sql/production-11-device-approval.sql`을 Supabase 운영 프로젝트에 `stage11_device_approval_proof` 마이그레이션으로 적용했습니다. `stage11_devices`와 `stage11_device_nonces`는 RLS 활성화 및 일반 사용자 DB 직접 권한 회수 상태입니다. 승인 권한은 서버 관리자만 가집니다. 실제 사용자·기기 승인 정보를 임의로 생성하지 않았습니다. 승인된 기기와 서버의 **실제 브라우저 E2E 시험은 관리자 승인 후 수행해야 하며 미실행**입니다.
 
@@ -161,3 +161,13 @@ Supabase SQL Editor에서 `sql/production-3-notes-uuid.sql`을 실행해 기존 
 ## 12단계 제출 자기 점검 정정
 
 `697a176` 이후 `src/attack-check.mjs`의 제출 점검은 기록된 심판 요청 근거가 없으면 `notes_list_without_login`을 `not_run`으로 유지하며 대체 HTTP 요청을 보내지 않습니다. 대시보드의 별도 실시간 HTTP 점검과 제출 묶음의 기록은 구별합니다. 회귀 검사는 3~12단계 전체에서 이 동작과 배포 주소 검증을 확인합니다. 본문의 Bundle 설명도 현재 동작에 맞췄습니다. 사용자가 보고한 기존 12단계 심판 결과는 100점 통과이며, 이 문서 보완 후 새 커밋에 대한 재심사는 별도로 실행하지 않았습니다.
+
+## 5단계 가점 · 서버 함수 로그인
+
+**복구 기준:** 변경 직전 Production 커밋은 `e4a4fb7d96c99988f556081e8e6bfbb3dbf51a1f`이며 GitHub 브랜치 `savepoint/stage12-100-before-server-login`으로 보존했습니다. 기존 12단계 작전실, 요청 기록 없는 `not_run`, 메모 소유권·구역 제한·기기 서명·nonce 검사와 복구 API를 보존합니다. 단계 설정과 심판 발급자·로그인 발급자·원본 API·허용 경로는 바꾸지 않습니다.
+
+**동작:** 브라우저의 Supabase SDK와 공개 키를 제거했습니다. 화면은 `POST /api/auth`에 이메일·비밀번호를 JSON으로 보내고 서버는 기존 `SUPABASE_URL`, `SUPABASE_SECRET_KEY`로 요청마다 별도 클라이언트를 만들어 Supabase Auth 비밀번호 로그인을 수행합니다. 비밀번호·서버 키를 로그·파일에 남기지 않으며, 응답에는 access token·만료 시각·사용자 ID만 포함하고 refresh token·공개 키·서버 키·사용자 메타데이터는 반환하지 않습니다. `Cache-Control: no-store`를 적용합니다. 브라우저는 세션을 현재 화면의 메모리에만 두고 만료 시 지우며 재로그인을 안내합니다. 새로고침하면 세션과 기기 개인키가 사라지는 기존 동작을 유지합니다.
+
+**로그아웃:** `DELETE /api/auth`는 요청 Bearer에 해당하는 Supabase 세션의 갱신 권한을 종료합니다. 화면은 네트워크 실패 시에도 로컬 세션·기기 키·보호 자료 표시를 지우고 서버 종료 미확인을 알립니다. 이미 발급된 access token은 JWT 만료까지 유효할 수 있으며, 로그아웃이 즉시 모든 JWT를 무효화한다고 주장하지 않습니다.
+
+**검증과 복구:** 로컬 `npm test`와 `npm run build -- --local` 후, 이번 배포는 `npm run verify:server-login && npm run build`를 빌드 명령으로 사용합니다. 검증 스크립트는 서버 환경에서 임시 가상 계정을 생성하고 실제 비밀번호 로그인, 기존 API의 신원 검증, 미승인 기기 거부, 잘못된 비밀번호 거부, 로그아웃을 확인한 뒤 계정을 삭제합니다. 시험 계정에는 메모나 기기 승인을 만들지 않으며 자격증명과 토큰은 메모리에서만 사용합니다. 검증 실패는 빌드 실패로 처리합니다. 기존 계정의 비밀번호와 DB 자료는 변경하지 않습니다. 이후 로그인 장애가 확인되면 복구 기준 커밋을 새 Production 배포로 복구하고 새 제출은 중단합니다. 화면에서는 **로그인 → 기기 승인 요청 → 승인 상태 확인 → 탈환 작전실 열기** 순으로 기존 기능을 확인할 수 있습니다. 정상 로그인은 세션을 발급하고 무로그인 API는 401, 미승인 기기의 보호 요청은 403이어야 합니다. 로컬 시험이나 이 검증은 새 심판 가점 통과를 대신하지 않습니다.

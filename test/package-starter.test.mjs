@@ -24,6 +24,7 @@ test('패키징 함수 기준표는 시작 틀의 실제 API와 일치한다', a
   assert.deepEqual(baseline.functions, []);
   assert.deepEqual(baseline.preserved, ['api/notes.js', 'api/notes/[id].js']);
   assert.deepEqual(baseline.allowedNew, ['api/ai.js', 'api/threat-intel.js']);
+  assert.deepEqual(baseline.stage5BonusApi, ['api/auth.js']);
   assert.deepEqual(baseline.stage8Api,
     ['api/class-announcements/[id].js', 'api/admin/class-announcements/[id].js',
       'api/instructor-materials/[id].js']);
@@ -32,7 +33,7 @@ test('패키징 함수 기준표는 시작 틀의 실제 API와 일치한다', a
   assert.deepEqual(baseline.stage12Api, ['api/operations.js']);
   assert.deepEqual(actual,
     [...baseline.functions, ...baseline.preserved, ...baseline.allowedNew,
-      ...baseline.stage8Api, ...baseline.stage10Api, ...baseline.stage11Api,
+      ...baseline.stage5BonusApi, ...baseline.stage8Api, ...baseline.stage10Api, ...baseline.stage11Api,
       ...baseline.stage12Api].sort());
 });
 

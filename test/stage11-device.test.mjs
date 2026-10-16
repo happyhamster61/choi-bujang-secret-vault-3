@@ -56,7 +56,8 @@ test('서버 미승인·다른 소유자·무서명 요청은 보호 자료에 �
 test('설치형 UI는 인증 지속 저장을 끄고 개인키를 저장소에 기록하지 않는다', () => {
   const html=readFileSync(new URL('../public/index.html',import.meta.url),'utf8');
   const ui=readFileSync(new URL('../public/device-client.js',import.meta.url),'utf8');
-  assert.match(html,/persistSession: false/);
+  assert.doesNotMatch(html, /localStorage|sessionStorage|indexedDB|window\.supabase/);
+  assert.match(html, /showSession\(null\)/);
   assert.match(html,/deviceGate.isApproved\(\)/);
   assert.match(html,/deviceGate.signedFetch/);
   assert.doesNotMatch(ui,/(localStorage|sessionStorage|indexedDB)\s*[.(]/);
