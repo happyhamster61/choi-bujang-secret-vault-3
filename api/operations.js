@@ -6,7 +6,7 @@ const config = require('../aleph.config.json');
 import { RULE_IDS } from '../src/decider.mjs';
 import { NotesAccessError, requireNotesAccess, sendNotesError } from '../src/notes-service.mjs';
 import { requireApprovedDevice } from '../src/device-proof.mjs';
-import { unexecutedChallengeCases, sanitizeCheck, summarizeChecks, buildEvidenceGroups
+import { sanitizeCheck, summarizeChecks, buildEvidenceGroups
 } from '../src/operations-report.mjs';
 
 async function countRows(supabase, table, ownerId = null) {
@@ -85,11 +85,10 @@ export default async function handler(request, response) {
     const tally = row => row?.error || !Number.isInteger(row?.count)
       ? { status: 'unavailable', count: null }
       : { status: 'observed', count: row.count };
-    const challengeCases = unexecutedChallengeCases();
-    const checks = [probe, ...challengeCases];
     const deploymentCommit = process.env.VERCEL_GIT_COMMIT_SHA ?? null;
     const groups = buildEvidenceGroups({probe,
       submissionAttempts:await runAttackChecks(config), deploymentCommit});
+    const checks = Object.values(groups).flatMap(group => group.checks);
     return response.status(200).json({
       schema:'byteback.operations.v1',
       checkedAt:new Date().toISOString(),

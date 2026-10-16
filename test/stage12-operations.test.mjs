@@ -124,3 +124,12 @@ test('실제 제출 점검 11건은 작전실에서도 미실행이며 공식 41
   assert.equal(groups.officialChallenges.checks.length,41);
   assert.equal(groups.officialChallenges.summary.unexecuted,41);
 });
+
+test('HTTP 관측 집계는 성공 문구와 응답 없는 실패를 관측으로 세지 않는다', () => {
+  const row={id:'probe',expected:'HTTP 401',observed:'성공했습니다',status:'observed',
+    source:'live_http_response',checkedAt:'2026-10-16T00:00:00Z',requestId:'student-only'};
+  assert.throws(()=>summarizeChecks([row]),/missing_http_response_evidence/);
+  assert.throws(()=>sanitizeCheck({...row,observed:'HTTP 401',requestId:null}));
+  assert.throws(()=>sanitizeCheck({...row,status:'unavailable',observed:'HTTP 401'}));
+  assert.deepEqual(summarizeChecks([{...row,observed:'HTTP 500'}]),{observed:1,unexecuted:0,unavailable:0});
+});

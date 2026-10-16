@@ -25,6 +25,15 @@ export function sanitizeCheck(row) {
       || !row.observed.trim() || !Number.isFinite(Date.parse(row.checkedAt)))) {
     throw new Error('missing_observation');
   }
+  if (row.status === 'observed' && row.source !== 'local_test_execution'
+      && row.source !== 'independent_http_response'
+      && (!/^HTTP [1-5][0-9]{2}(?: [A-Z][A-Z0-9_]{0,59})?$/.test(row.observed)
+        || row.source !== 'live_http_response' || !row.requestId)) {
+    throw new Error('missing_http_response_evidence');
+  }
+  if (row.status === 'unavailable' && row.observed != null) {
+    throw new Error('failed_request_has_response');
+  }
   if (row.status === 'not_run' && (row.observed != null || row.requestId != null
       || row.checkedAt != null)) throw new Error('unexecuted_has_evidence');
   return {
@@ -42,6 +51,7 @@ export function sanitizeCheck(row) {
 }
 export function summarizeChecks(checks) {
   if (!Array.isArray(checks)) throw new TypeError('invalid_checks');
+  checks = checks.map(sanitizeCheck);
   return {
     observed: checks.filter(x => x.status === 'observed').length,
     unexecuted: checks.filter(x => x.status === 'not_run').length,
